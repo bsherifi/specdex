@@ -1,6 +1,6 @@
 //! Validates an entry's `data` against its KB's schema.
 //!
-//! Returns the **primary_value** on success (extracted from the primary
+//! Returns the **`primary_value`** on success (extracted from the primary
 //! field) so callers can persist it to the denormalized column.
 
 use serde::{Deserialize, Serialize};
@@ -25,18 +25,15 @@ pub enum EntryValidationError {
     InvalidPrimary(String),
 }
 
-/// Returns the primary_value string on success. Validates every field
+/// Returns the `primary_value` string on success. Validates every field
 /// declared in `schema`; reports every error rather than short-circuiting
 /// so the UI can highlight all bad fields at once.
 pub fn validate(data: &EntryData, schema: &Schema) -> Result<String, Vec<EntryValidationError>> {
     let mut errs = Vec::new();
 
     // Unknown field check
-    let known: std::collections::HashSet<&str> = schema
-        .fields
-        .iter()
-        .map(|f| f.name.as_str())
-        .collect();
+    let known: std::collections::HashSet<&str> =
+        schema.fields.iter().map(|f| f.name.as_str()).collect();
     for k in data.keys() {
         if k.starts_with('_') {
             // `_archived` and other underscore-prefixed keys are reserved.
@@ -98,10 +95,7 @@ pub fn validate(data: &EntryData, schema: &Schema) -> Result<String, Vec<EntryVa
     if errs.is_empty() {
         primary.ok_or_else(|| {
             vec![EntryValidationError::InvalidPrimary(
-                schema
-                    .primary()
-                    .map(|f| f.name.clone())
-                    .unwrap_or_default(),
+                schema.primary().map(|f| f.name.clone()).unwrap_or_default(),
             )]
         })
     } else {
@@ -110,18 +104,20 @@ pub fn validate(data: &EntryData, schema: &Schema) -> Result<String, Vec<EntryVa
 }
 
 fn value_matches_type(v: &Value, t: &FieldType) -> bool {
-    match (t, v) {
-        (FieldType::Text | FieldType::TextMultiline | FieldType::Url, Value::String(_)) => true,
-        (FieldType::Text | FieldType::TextMultiline | FieldType::Url, Value::Null) => true,
-        (FieldType::Number, Value::Number(_)) => true,
-        (FieldType::Number, Value::Null) => true,
-        (FieldType::Date, Value::String(s)) => chrono::NaiveDate::parse_from_str(s, "%Y-%m-%d").is_ok(),
-        (FieldType::Date, Value::Null) => true,
-        (FieldType::Select { .. }, Value::String(_)) => true,
-        (FieldType::Select { .. }, Value::Null) => true,
-        (FieldType::ImageAttachment, Value::String(_)) => true,
-        (FieldType::ImageAttachment, Value::Null) => true,
-        _ => false,
+    // Null is accepted for every field type (an empty/cleared field).
+    if v.is_null() {
+        return true;
+    }
+    match t {
+        FieldType::Text
+        | FieldType::TextMultiline
+        | FieldType::Url
+        | FieldType::Select { .. }
+        | FieldType::ImageAttachment => v.is_string(),
+        FieldType::Number => v.is_number(),
+        FieldType::Date => v
+            .as_str()
+            .is_some_and(|s| chrono::NaiveDate::parse_from_str(s, "%Y-%m-%d").is_ok()),
     }
 }
 
@@ -189,7 +185,9 @@ mod tests {
             FieldDef {
                 name: "category".into(),
                 label: "Category".into(),
-                field_type: FieldType::Select { options: vec!["a".into(), "b".into()] },
+                field_type: FieldType::Select {
+                    options: vec!["a".into(), "b".into()],
+                },
                 required: false,
                 searchable: None,
                 primary: false,
@@ -201,7 +199,9 @@ mod tests {
         data.insert("code".into(), json!("X"));
         data.insert("category".into(), json!("c"));
         let errs = validate(&data, &schema).unwrap_err();
-        assert!(errs.iter().any(|e| matches!(e, EntryValidationError::InvalidSelectOption(_, _))));
+        assert!(errs
+            .iter()
+            .any(|e| matches!(e, EntryValidationError::InvalidSelectOption(_, _))));
     }
 
     #[test]
@@ -211,7 +211,9 @@ mod tests {
         data.insert("code".into(), json!("X"));
         data.insert("random".into(), json!("?"));
         let errs = validate(&data, &schema).unwrap_err();
-        assert!(errs.iter().any(|e| matches!(e, EntryValidationError::UnknownField(_))));
+        assert!(errs
+            .iter()
+            .any(|e| matches!(e, EntryValidationError::UnknownField(_))));
     }
 
     #[test]
@@ -246,6 +248,8 @@ mod tests {
         bad.insert("code".into(), json!("X"));
         bad.insert("issued".into(), json!("01/01/2026"));
         let errs = validate(&bad, &schema).unwrap_err();
-        assert!(errs.iter().any(|e| matches!(e, EntryValidationError::WrongType(_, _, _))));
+        assert!(errs
+            .iter()
+            .any(|e| matches!(e, EntryValidationError::WrongType(_, _, _))));
     }
 }

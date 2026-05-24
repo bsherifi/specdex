@@ -40,7 +40,7 @@ pub struct ListEntries {
     pub offset: Option<u32>,
 }
 
-/// Soft-duplicate signal — same KB and same primary_value already exists.
+/// Soft-duplicate signal — same KB and same `primary_value` already exists.
 /// Returned from `create` alongside the new entry so the UI can warn.
 #[derive(Debug, Clone, PartialEq)]
 pub struct SoftDuplicateWarning {
@@ -61,14 +61,17 @@ pub struct EntryRepo<'db> {
 
 impl<'db> EntryRepo<'db> {
     pub fn new(db: &'db Db, events: &'db EventBus, identity_name: Option<String>) -> Self {
-        Self { db, events, identity_name }
+        Self {
+            db,
+            events,
+            identity_name,
+        }
     }
 
     pub fn create(&self, args: CreateEntry) -> Result<CreateEntryResult> {
         let kb_repo = KbRepo::new(self.db, self.events, self.identity_name.clone());
         let kb = kb_repo.get(args.kb_id)?;
-        let primary_value = validate(&args.data, &kb.schema)
-            .map_err(map_validation_errs)?;
+        let primary_value = validate(&args.data, &kb.schema).map_err(map_validation_errs)?;
 
         let aliases = Entry::normalize_aliases(args.aliases);
         let id = EntryId::new();
@@ -128,7 +131,10 @@ impl<'db> EntryRepo<'db> {
             updated_at: now,
             edited_by: self.identity_name.clone(),
         };
-        self.events.emit(Event::EntryCreated { entry_id: entry.id, kb_id: entry.kb_id });
+        self.events.emit(Event::EntryCreated {
+            entry_id: entry.id,
+            kb_id: entry.kb_id,
+        });
         Ok(CreateEntryResult { entry, warning })
     }
 
@@ -142,38 +148,44 @@ impl<'db> EntryRepo<'db> {
     }
 
     pub fn get(&self, id: EntryId) -> Result<Entry> {
-        self.find(id)?.ok_or_else(|| CoreError::NotFound(format!("entry={id}")))
+        self.find(id)?
+            .ok_or_else(|| CoreError::NotFound(format!("entry={id}")))
     }
 
     pub fn list(&self, args: ListEntries) -> Result<Vec<Entry>> {
+        let ListEntries {
+            kb_id,
+            filter,
+            source_doc_id,
+            limit,
+            offset,
+        } = args;
         self.db.with(|conn| {
+            use std::fmt::Write as _;
             let mut sql = String::from(
                 "SELECT id, kb_id, primary_value, data_json, aliases_json,
                         source_doc_id, source_page, source_bbox_json, source_text,
                         notes, created_at, updated_at, edited_by
                  FROM entries WHERE kb_id = ?1",
             );
-            let mut params_vec: Vec<Box<dyn rusqlite::ToSql>> = vec![Box::new(args.kb_id.to_string())];
-            if let Some(ref f) = args.filter {
+            let mut params_vec: Vec<Box<dyn rusqlite::ToSql>> = vec![Box::new(kb_id.to_string())];
+            if let Some(f) = &filter {
                 sql.push_str(" AND (primary_value LIKE ?2 OR data_json LIKE ?2)");
-                let pat = format!("%{f}%");
-                params_vec.push(Box::new(pat));
+                params_vec.push(Box::new(format!("%{f}%")));
             }
-            if let Some(sid) = args.source_doc_id {
-                let placeholder = format!(" AND source_doc_id = ?{}", params_vec.len() + 1);
-                sql.push_str(&placeholder);
+            if let Some(sid) = source_doc_id {
+                let _ = write!(sql, " AND source_doc_id = ?{}", params_vec.len() + 1);
                 params_vec.push(Box::new(sid.to_string()));
             }
             sql.push_str(" ORDER BY primary_value ASC");
-            if let Some(l) = args.limit {
-                sql.push_str(&format!(" LIMIT {l}"));
+            if let Some(l) = limit {
+                let _ = write!(sql, " LIMIT {l}");
             }
-            if let Some(o) = args.offset {
-                sql.push_str(&format!(" OFFSET {o}"));
+            if let Some(o) = offset {
+                let _ = write!(sql, " OFFSET {o}");
             }
             let mut stmt = conn.prepare(&sql)?;
-            let param_refs: Vec<&dyn rusqlite::ToSql> =
-                params_vec.iter().map(|b| b.as_ref()).collect();
+            let param_refs: Vec<&dyn rusqlite::ToSql> = params_vec.iter().map(|b| &**b).collect();
             let rows = stmt
                 .query_map(rusqlite::params_from_iter(param_refs), map_entry_row)?
                 .collect::<rusqlite::Result<Vec<_>>>()?;
@@ -200,7 +212,7 @@ impl<'db> EntryRepo<'db> {
             existing.notes = n;
         }
         existing.updated_at = Utc::now();
-        existing.edited_by = self.identity_name.clone();
+        existing.edited_by.clone_from(&self.identity_name);
 
         let now_s = existing.updated_at.to_rfc3339();
         self.db.with_mut(|conn| {
@@ -214,9 +226,16 @@ impl<'db> EntryRepo<'db> {
                     existing.primary_value,
                     serde_json::to_string(&existing.data)?,
                     serde_json::to_string(&existing.aliases)?,
-                    existing.source.as_ref().map(|s| s.source_doc_id.to_string()),
+                    existing
+                        .source
+                        .as_ref()
+                        .map(|s| s.source_doc_id.to_string()),
                     existing.source.as_ref().map(|s| s.page),
-                    existing.source.as_ref().map(|s| serde_json::to_string(&s.bbox)).transpose()?,
+                    existing
+                        .source
+                        .as_ref()
+                        .map(|s| serde_json::to_string(&s.bbox))
+                        .transpose()?,
                     existing.source.as_ref().map(|s| s.text.clone()),
                     existing.notes,
                     now_s,
@@ -230,7 +249,10 @@ impl<'db> EntryRepo<'db> {
             Ok(())
         })?;
 
-        self.events.emit(Event::EntryUpdated { entry_id: id, kb_id: existing.kb_id });
+        self.events.emit(Event::EntryUpdated {
+            entry_id: id,
+            kb_id: existing.kb_id,
+        });
         Ok(existing)
     }
 
@@ -240,7 +262,10 @@ impl<'db> EntryRepo<'db> {
             conn.execute("DELETE FROM entries WHERE id = ?1", [id.to_string()])?;
             Ok(())
         })?;
-        self.events.emit(Event::EntryDeleted { entry_id: id, kb_id: existing.kb_id });
+        self.events.emit(Event::EntryDeleted {
+            entry_id: id,
+            kb_id: existing.kb_id,
+        });
         Ok(())
     }
 
@@ -253,7 +278,7 @@ impl<'db> EntryRepo<'db> {
             // Per-id to keep events one-per-entry. Acceptable at v1 scale.
             match self.delete(*id) {
                 Ok(()) => total += 1,
-                Err(CoreError::NotFound(_)) => continue,
+                Err(CoreError::NotFound(_)) => {}
                 Err(e) => return Err(e),
             }
         }
@@ -268,10 +293,9 @@ SELECT id, kb_id, primary_value, data_json, aliases_json,
 FROM entries WHERE id = ?1";
 
 fn map_entry_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<Entry> {
-    let convert =
-        |e: Box<dyn std::error::Error + Send + Sync>| -> rusqlite::Error {
-            rusqlite::Error::FromSqlConversionFailure(0, rusqlite::types::Type::Text, e)
-        };
+    let convert = |e: Box<dyn std::error::Error + Send + Sync>| -> rusqlite::Error {
+        rusqlite::Error::FromSqlConversionFailure(0, rusqlite::types::Type::Text, e)
+    };
     let id: String = row.get(0)?;
     let id = id.parse::<EntryId>().map_err(|e| convert(Box::new(e)))?;
     let kb_id: String = row.get(1)?;
@@ -279,14 +303,17 @@ fn map_entry_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<Entry> {
     let data_json: String = row.get(3)?;
     let data: EntryData = serde_json::from_str(&data_json).map_err(|e| convert(Box::new(e)))?;
     let aliases_json: String = row.get(4)?;
-    let aliases: Vec<String> = serde_json::from_str(&aliases_json).map_err(|e| convert(Box::new(e)))?;
+    let aliases: Vec<String> =
+        serde_json::from_str(&aliases_json).map_err(|e| convert(Box::new(e)))?;
     let source_doc_id: Option<String> = row.get(5)?;
     let source_page: Option<u32> = row.get(6)?;
     let source_bbox_json: Option<String> = row.get(7)?;
     let source_text: Option<String> = row.get(8)?;
     let source = match (source_doc_id, source_page, source_bbox_json) {
         (Some(sid), Some(p), Some(bbox_s)) => {
-            let sid = sid.parse::<SourceDocId>().map_err(|e| convert(Box::new(e)))?;
+            let sid = sid
+                .parse::<SourceDocId>()
+                .map_err(|e| convert(Box::new(e)))?;
             let bbox: BBox = serde_json::from_str(&bbox_s).map_err(|e| convert(Box::new(e)))?;
             Some(SourceRef {
                 source_doc_id: sid,
@@ -321,8 +348,8 @@ fn map_entry_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<Entry> {
 
 fn map_validation_errs(errs: Vec<EntryValidationError>) -> CoreError {
     CoreError::Validation(
-        errs.iter()
-            .map(std::string::ToString::to_string)
+        errs.into_iter()
+            .map(|e| e.to_string())
             .collect::<Vec<_>>()
             .join("; "),
     )
@@ -422,7 +449,10 @@ mod tests {
                 notes: None,
             })
             .unwrap();
-        assert_eq!(second.warning.as_ref().unwrap().existing_entry_id, first.entry.id);
+        assert_eq!(
+            second.warning.as_ref().unwrap().existing_entry_id,
+            first.entry.id
+        );
     }
 
     #[test]
@@ -500,14 +530,23 @@ mod tests {
         // Drain KbCreated + EntryCreated queued on the shared bus.
         while rx.try_recv().is_ok() {}
         let updated = repo
-            .update(created.id, UpdateEntry {
-                data: Some(data("NEW", "?")),
-                ..Default::default()
-            })
+            .update(
+                created.id,
+                UpdateEntry {
+                    data: Some(data("NEW", "?")),
+                    ..Default::default()
+                },
+            )
             .unwrap();
         assert_eq!(updated.primary_value, "NEW");
         let evt = rx.try_recv().unwrap();
-        assert_eq!(evt, Event::EntryUpdated { entry_id: created.id, kb_id });
+        assert_eq!(
+            evt,
+            Event::EntryUpdated {
+                entry_id: created.id,
+                kb_id
+            }
+        );
     }
 
     #[test]
@@ -516,7 +555,13 @@ mod tests {
         let kb_id = boeing_kb(&db, &ev);
         let repo = EntryRepo::new(&db, &ev, None);
         let created = repo
-            .create(CreateEntry { kb_id, data: data("X", "?"), aliases: vec![], source: None, notes: None })
+            .create(CreateEntry {
+                kb_id,
+                data: data("X", "?"),
+                aliases: vec![],
+                source: None,
+                notes: None,
+            })
             .unwrap()
             .entry;
         repo.delete(created.id).unwrap();
@@ -529,11 +574,27 @@ mod tests {
         let kb_id = boeing_kb(&db, &ev);
         let repo = EntryRepo::new(&db, &ev, None);
         let a = repo
-            .create(CreateEntry { kb_id, data: data("A", "?"), aliases: vec![], source: None, notes: None })
-            .unwrap().entry.id;
+            .create(CreateEntry {
+                kb_id,
+                data: data("A", "?"),
+                aliases: vec![],
+                source: None,
+                notes: None,
+            })
+            .unwrap()
+            .entry
+            .id;
         let b = repo
-            .create(CreateEntry { kb_id, data: data("B", "?"), aliases: vec![], source: None, notes: None })
-            .unwrap().entry.id;
+            .create(CreateEntry {
+                kb_id,
+                data: data("B", "?"),
+                aliases: vec![],
+                source: None,
+                notes: None,
+            })
+            .unwrap()
+            .entry
+            .id;
         let ghost = EntryId::new();
         let n = repo.bulk_delete(&[a, b, ghost]).unwrap();
         assert_eq!(n, 2);
