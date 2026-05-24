@@ -233,6 +233,32 @@ impl<'db> EntryRepo<'db> {
         self.events.emit(Event::EntryUpdated { entry_id: id, kb_id: existing.kb_id });
         Ok(existing)
     }
+
+    pub fn delete(&self, id: EntryId) -> Result<()> {
+        let existing = self.get(id)?;
+        self.db.with_mut(|conn| {
+            conn.execute("DELETE FROM entries WHERE id = ?1", [id.to_string()])?;
+            Ok(())
+        })?;
+        self.events.emit(Event::EntryDeleted { entry_id: id, kb_id: existing.kb_id });
+        Ok(())
+    }
+
+    pub fn bulk_delete(&self, ids: &[EntryId]) -> Result<usize> {
+        if ids.is_empty() {
+            return Ok(0);
+        }
+        let mut total = 0usize;
+        for id in ids {
+            // Per-id to keep events one-per-entry. Acceptable at v1 scale.
+            match self.delete(*id) {
+                Ok(()) => total += 1,
+                Err(CoreError::NotFound(_)) => continue,
+                Err(e) => return Err(e),
+            }
+        }
+        Ok(total)
+    }
 }
 
 const SELECT_ENTRY: &str = "
@@ -482,5 +508,34 @@ mod tests {
         assert_eq!(updated.primary_value, "NEW");
         let evt = rx.try_recv().unwrap();
         assert_eq!(evt, Event::EntryUpdated { entry_id: created.id, kb_id });
+    }
+
+    #[test]
+    fn delete_removes_entry_and_emits() {
+        let (db, ev) = fresh();
+        let kb_id = boeing_kb(&db, &ev);
+        let repo = EntryRepo::new(&db, &ev, None);
+        let created = repo
+            .create(CreateEntry { kb_id, data: data("X", "?"), aliases: vec![], source: None, notes: None })
+            .unwrap()
+            .entry;
+        repo.delete(created.id).unwrap();
+        assert!(repo.find(created.id).unwrap().is_none());
+    }
+
+    #[test]
+    fn bulk_delete_skips_missing_ids() {
+        let (db, ev) = fresh();
+        let kb_id = boeing_kb(&db, &ev);
+        let repo = EntryRepo::new(&db, &ev, None);
+        let a = repo
+            .create(CreateEntry { kb_id, data: data("A", "?"), aliases: vec![], source: None, notes: None })
+            .unwrap().entry.id;
+        let b = repo
+            .create(CreateEntry { kb_id, data: data("B", "?"), aliases: vec![], source: None, notes: None })
+            .unwrap().entry.id;
+        let ghost = EntryId::new();
+        let n = repo.bulk_delete(&[a, b, ghost]).unwrap();
+        assert_eq!(n, 2);
     }
 }
