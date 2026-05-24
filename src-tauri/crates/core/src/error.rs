@@ -50,6 +50,15 @@ impl From<serde_json::Error> for CoreError {
     }
 }
 
+impl From<rusqlite::Error> for CoreError {
+    fn from(e: rusqlite::Error) -> Self {
+        match &e {
+            rusqlite::Error::QueryReturnedNoRows => Self::NotFound("row".into()),
+            _ => Self::Db(e.to_string()),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

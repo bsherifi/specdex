@@ -23,6 +23,8 @@ uuid = { workspace = true }
 thiserror = { workspace = true }
 specta = { workspace = true, features = ["chrono", "uuid", "derive", "serde_json"] }
 tracing = { workspace = true }
+rusqlite = { version = "0.32", features = ["bundled", "chrono", "uuid", "serde_json"] }
 
 [dev-dependencies]
 serde_json = { workspace = true }
+tempfile = "3"
