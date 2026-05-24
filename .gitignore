@@ -25,6 +25,21 @@ Cargo.lock.bak
 # Tauri build artifacts (placeholder; plan 02 expands this)
 src-tauri/target
 
+# Node / Vite
+node_modules/
+dist/
+.vite/
+
+# Tauri dev artifacts
+src-tauri/gen/
+.tauri/
+
+# Editor / OS
+.DS_Store
+*.log
+.vscode/
+.idea/
+
 # RustRover
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
 #  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore

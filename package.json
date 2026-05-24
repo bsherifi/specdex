@@ -1,0 +1,49 @@
+{
+  "name": "specdex",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "tauri": "tauri --config src-tauri/tauri.conf.json",
+    "tauri:dev": "tauri --config src-tauri/tauri.conf.json dev",
+    "tauri:build": "tauri --config src-tauri/tauri.conf.json build"
+  },
+  "dependencies": {
+    "react": "19.0.0",
+    "react-dom": "19.0.0"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "2.0.0",
+    "@tauri-apps/api": "2.0.0",
+    "@testing-library/dom": "10.4.0",
+    "@testing-library/jest-dom": "6.4.6",
+    "@testing-library/react": "16.0.0",
+    "@types/react": "19.0.0",
+    "@types/react-dom": "19.0.0",
+    "@typescript-eslint/eslint-plugin": "8.0.0",
+    "@typescript-eslint/parser": "8.0.0",
+    "@vitejs/plugin-react": "4.3.1",
+    "eslint": "9.7.0",
+    "eslint-plugin-react": "7.34.3",
+    "eslint-plugin-react-hooks": "5.0.0",
+    "eslint-plugin-react-refresh": "0.4.7",
+    "jsdom": "24.1.0",
+    "prettier": "3.3.2",
+    "typescript": "5.5.3",
+    "vite": "5.3.3",
+    "vitest": "2.0.0"
+  },
+  "packageManager": "pnpm@9.5.0",
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
