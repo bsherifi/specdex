@@ -1,0 +1,20 @@
+[package]
+name = "specdex_parsers"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+description = "Specdex parsers: DocumentParser trait + pdfium + OCR implementations."
+
+[lib]
+name = "specdex_parsers"
+path = "src/lib.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+
+[dev-dependencies]
