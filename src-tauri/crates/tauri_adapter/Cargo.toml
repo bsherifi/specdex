@@ -1,0 +1,22 @@
+[package]
+name = "tauri_adapter"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+description = "Specdex Tauri adapter binary: thin command layer over specdex_core."
+
+[[bin]]
+name = "specdex"
+path = "src/main.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+specdex_core = { path = "../core" }
+specdex_parsers = { path = "../parsers" }
+
+[dev-dependencies]
