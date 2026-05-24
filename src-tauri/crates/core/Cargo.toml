@@ -24,7 +24,10 @@ thiserror = { workspace = true }
 specta = { workspace = true, features = ["chrono", "uuid", "derive", "serde_json"] }
 tracing = { workspace = true }
 rusqlite = { version = "0.32", features = ["bundled", "chrono", "uuid", "serde_json"] }
-tokio = { version = "1", default-features = false, features = ["sync"] }
+# Jobs runner needs rt (spawn) + time on top of `sync`. We avoid the `macros`
+# feature (tests build their own runtime) to keep tokio-macros out of the tree.
+tokio = { version = "1", default-features = false, features = ["rt", "rt-multi-thread", "sync", "time"] }
+sha2 = "0.10"
 
 [dev-dependencies]
 serde_json = { workspace = true }

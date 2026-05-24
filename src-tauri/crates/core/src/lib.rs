@@ -17,6 +17,7 @@ pub mod events;
 pub mod identity;
 pub mod kb;
 pub mod models;
+pub mod parse;
 pub mod schema_migration;
 
 pub use error::CoreError;
