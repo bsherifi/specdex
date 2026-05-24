@@ -41,6 +41,20 @@ export default [
     },
   },
   {
+    // Vendored shadcn/ui primitives mirror upstream output verbatim. They lean on
+    // DOM lib types in type positions (which the base `no-undef` rule misreports —
+    // typescript-eslint recommends disabling it for TS) and skip prop-types (TS
+    // handles prop validation). Relax both for this directory only.
+    files: ["src/components/ui/**/*.{ts,tsx}"],
+    rules: {
+      "no-undef": "off",
+      "react/prop-types": "off",
+      "react/display-name": "off",
+      // cmdk drives styling via custom DOM attributes (e.g. cmdk-input-wrapper).
+      "react/no-unknown-property": "off",
+    },
+  },
+  {
     ignores: ["dist", "node_modules", "src-tauri/target", "src/lib/bindings.ts"],
   },
 ];
