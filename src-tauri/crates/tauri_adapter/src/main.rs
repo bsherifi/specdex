@@ -7,6 +7,8 @@
 
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod commands;
+
 use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 
 fn init_tracing() {
