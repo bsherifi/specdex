@@ -1,0 +1,20 @@
+[package]
+name = "specdex_core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+description = "Specdex core: business logic (KB, entries, ingest, scanner, search, backup)."
+
+[lib]
+name = "specdex_core"
+path = "src/lib.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+
+[dev-dependencies]
