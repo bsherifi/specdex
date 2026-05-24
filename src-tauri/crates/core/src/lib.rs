@@ -21,6 +21,7 @@ pub mod jobs;
 pub mod kb;
 pub mod models;
 pub mod parse;
+pub mod scanner;
 pub mod schema_migration;
 pub mod source_doc;
 

@@ -28,6 +28,8 @@ rusqlite = { version = "0.32", features = ["bundled", "chrono", "uuid", "serde_j
 # feature (tests build their own runtime) to keep tokio-macros out of the tree.
 tokio = { version = "1", default-features = false, features = ["rt", "rt-multi-thread", "sync", "time"] }
 sha2 = "0.10"
+aho-corasick = "1.1"
+dashmap = "6.1"
 
 [dev-dependencies]
 serde_json = { workspace = true }
