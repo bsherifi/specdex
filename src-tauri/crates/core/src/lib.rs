@@ -1,18 +1,18 @@
-//! Specdex core library — business logic for KBs, entries, schemas, ingest,
-//! scanning, search, backup, identity, events, and jobs.
+//! Specdex core — domain types and business logic.
 //!
-//! No transport (Tauri/HTTP) types live here. See SPECDEX-V1.md §10.
+//! Layout:
+//!  - `models`   — pure data types (this plan, 10).
+//!  - `error`    — `CoreError` enum (this plan).
+//!  - `db`       — `SQLite` repos (plan 11+).
+//!  - `kb`/`entry`/`schema`/`ingest`/`scanner`/`search`/`backup`/`identity`/
+//!    `events`/`jobs` — business logic (plans 12–17, 40).
+//!
+//! Per SPECDEX-V1.md §10, this crate is transport-agnostic: no Tauri, no HTTP.
 
-/// Crate identifier used by the workspace smoke test (plan 01).
-/// Replaced by real exports in plan 10.
-pub const CRATE_NAME: &str = "specdex_core";
+pub mod error;
+pub mod models;
 
-#[cfg(test)]
-mod tests {
-    use super::CRATE_NAME;
+pub use error::CoreError;
+pub use models::*;
 
-    #[test]
-    fn crate_name_is_set() {
-        assert_eq!(CRATE_NAME, "specdex_core");
-    }
-}
+pub type Result<T> = std::result::Result<T, CoreError>;
