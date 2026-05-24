@@ -35,19 +35,20 @@ export default [
       ...reactHooks.configs.recommended.rules,
       "react/react-in-jsx-scope": "off",
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
+      // TypeScript already errors on undefined identifiers, and the base rule
+      // misreports DOM lib types (MediaQueryList, HTMLElement, …) used in type
+      // positions. typescript-eslint recommends disabling it for TS files.
+      "no-undef": "off",
     },
     settings: {
       react: { version: "19.0" },
     },
   },
   {
-    // Vendored shadcn/ui primitives mirror upstream output verbatim. They lean on
-    // DOM lib types in type positions (which the base `no-undef` rule misreports —
-    // typescript-eslint recommends disabling it for TS) and skip prop-types (TS
-    // handles prop validation). Relax both for this directory only.
+    // Vendored shadcn/ui primitives mirror upstream output verbatim. They skip
+    // prop-types (TS handles prop validation) and use custom DOM attributes.
     files: ["src/components/ui/**/*.{ts,tsx}"],
     rules: {
-      "no-undef": "off",
       "react/prop-types": "off",
       "react/display-name": "off",
       // cmdk drives styling via custom DOM attributes (e.g. cmdk-input-wrapper).
