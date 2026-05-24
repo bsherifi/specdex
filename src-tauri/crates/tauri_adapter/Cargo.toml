@@ -22,6 +22,9 @@ tauri-build = { workspace = true }
 specdex_core = { path = "../core" }
 specdex_parsers = { path = "../parsers" }
 tauri = { workspace = true }
+specta = { workspace = true }
+tauri-specta = { workspace = true }
+specta-typescript = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 tracing = { workspace = true }
