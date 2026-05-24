@@ -10,6 +10,7 @@
 //! Per SPECDEX-V1.md §10, this crate is transport-agnostic: no Tauri, no HTTP.
 
 pub mod db;
+pub mod entry_validation;
 pub mod error;
 pub mod events;
 pub mod identity;
