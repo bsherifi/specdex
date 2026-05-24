@@ -35,3 +35,22 @@ strip = "symbols"
 # Faster incremental builds during the 7 weekends of development.
 opt-level = 0
 debug = 1
+
+[workspace.dependencies]
+# Tauri 2 — pinned to the 2.x series; minor bumps within 2.x are acceptable.
+tauri = { version = "2", features = [] }
+tauri-build = { version = "2", features = [] }
+# Type bridge to TS — pinned per autonomous-overnight-plan.md / spec §9.1.
+specta = { version = "=2.0.0-rc.25" }
+tauri-specta = { version = "=2.0.0-rc.25", features = ["derive", "typescript"] }
+specta-typescript = { version = "=0.0.9" }
+# Shared utility crates used across core + adapter (resolved here so all
+# members get the same version).
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "1"
+uuid = { version = "1", features = ["v7", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "fs", "io-util", "time"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
