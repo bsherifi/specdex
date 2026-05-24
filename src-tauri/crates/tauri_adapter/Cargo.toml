@@ -15,8 +15,14 @@ path = "src/main.rs"
 [lints]
 workspace = true
 
+[build-dependencies]
+tauri-build = { workspace = true }
+
 [dependencies]
 specdex_core = { path = "../core" }
 specdex_parsers = { path = "../parsers" }
-
-[dev-dependencies]
+tauri = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
