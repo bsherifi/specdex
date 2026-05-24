@@ -20,6 +20,7 @@ pub mod kb;
 pub mod models;
 pub mod parse;
 pub mod schema_migration;
+pub mod source_doc;
 
 pub use error::CoreError;
 pub use events::EventBus;
