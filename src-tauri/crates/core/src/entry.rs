@@ -180,6 +180,59 @@ impl<'db> EntryRepo<'db> {
             Ok(rows)
         })
     }
+
+    pub fn update(&self, id: EntryId, patch: UpdateEntry) -> Result<Entry> {
+        let mut existing = self.get(id)?;
+        let kb_repo = KbRepo::new(self.db, self.events, self.identity_name.clone());
+        let kb = kb_repo.get(existing.kb_id)?;
+
+        if let Some(d) = patch.data {
+            existing.primary_value = validate(&d, &kb.schema).map_err(map_validation_errs)?;
+            existing.data = d;
+        }
+        if let Some(a) = patch.aliases {
+            existing.aliases = Entry::normalize_aliases(a);
+        }
+        if let Some(s) = patch.source {
+            existing.source = s;
+        }
+        if let Some(n) = patch.notes {
+            existing.notes = n;
+        }
+        existing.updated_at = Utc::now();
+        existing.edited_by = self.identity_name.clone();
+
+        let now_s = existing.updated_at.to_rfc3339();
+        self.db.with_mut(|conn| {
+            let affected = conn.execute(
+                "UPDATE entries SET
+                   primary_value = ?1, data_json = ?2, aliases_json = ?3,
+                   source_doc_id = ?4, source_page = ?5, source_bbox_json = ?6, source_text = ?7,
+                   notes = ?8, updated_at = ?9, edited_by = ?10
+                 WHERE id = ?11",
+                params![
+                    existing.primary_value,
+                    serde_json::to_string(&existing.data)?,
+                    serde_json::to_string(&existing.aliases)?,
+                    existing.source.as_ref().map(|s| s.source_doc_id.to_string()),
+                    existing.source.as_ref().map(|s| s.page),
+                    existing.source.as_ref().map(|s| serde_json::to_string(&s.bbox)).transpose()?,
+                    existing.source.as_ref().map(|s| s.text.clone()),
+                    existing.notes,
+                    now_s,
+                    self.identity_name,
+                    id.to_string(),
+                ],
+            )?;
+            if affected == 0 {
+                return Err(CoreError::NotFound(format!("entry={id}")));
+            }
+            Ok(())
+        })?;
+
+        self.events.emit(Event::EntryUpdated { entry_id: id, kb_id: existing.kb_id });
+        Ok(existing)
+    }
 }
 
 const SELECT_ENTRY: &str = "
@@ -400,5 +453,34 @@ mod tests {
         assert_eq!(list.len(), 2);
         assert_eq!(list[0].primary_value, "BAC3082");
         assert_eq!(list[1].primary_value, "BAC5050");
+    }
+
+    #[test]
+    fn update_recomputes_primary_value_and_emits() {
+        let (db, ev) = fresh();
+        let mut rx = ev.subscribe();
+        let kb_id = boeing_kb(&db, &ev);
+        let repo = EntryRepo::new(&db, &ev, None);
+        let created = repo
+            .create(CreateEntry {
+                kb_id,
+                data: data("OLD", "?"),
+                aliases: vec![],
+                source: None,
+                notes: None,
+            })
+            .unwrap()
+            .entry;
+        // Drain KbCreated + EntryCreated queued on the shared bus.
+        while rx.try_recv().is_ok() {}
+        let updated = repo
+            .update(created.id, UpdateEntry {
+                data: Some(data("NEW", "?")),
+                ..Default::default()
+            })
+            .unwrap();
+        assert_eq!(updated.primary_value, "NEW");
+        let evt = rx.try_recv().unwrap();
+        assert_eq!(evt, Event::EntryUpdated { entry_id: created.id, kb_id });
     }
 }
