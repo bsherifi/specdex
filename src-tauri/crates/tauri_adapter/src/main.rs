@@ -1,12 +1,12 @@
 //! Specdex Tauri adapter — binary entry point.
 //!
-//! This file is intentionally tiny in plan 02: bootstrap Tauri, install
-//! tracing, open the main window. Per SPECDEX-V1.md §10, all business
-//! logic lives in `specdex_core`; this binary will accumulate thin
-//! command wrappers in plan 20.
+//! Plan 04 wires tauri-specta. Plan 20 fills in the command surface.
+//! Per SPECDEX-V1.md §10, all business logic lives in `specdex_core`; this
+//! binary stays a thin command layer.
 
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod bindings_export;
 mod commands;
 
 use tracing_subscriber::{fmt, prelude::*, EnvFilter};
@@ -22,13 +22,27 @@ fn init_tracing() {
 
 fn main() {
     init_tracing();
-    tracing::info!(
-        version = env!("CARGO_PKG_VERSION"),
-        "specdex starting (plan 02 shell)"
-    );
+
+    // `--export-bindings`: write bindings.ts and exit. Used by `pnpm bindings`
+    // so CI / dev can refresh types without launching a window.
+    if std::env::args().any(|a| a == "--export-bindings") {
+        bindings_export::export().expect("failed to export bindings");
+        return;
+    }
+
+    // Debug builds also export at startup so dev iteration stays in sync
+    // without remembering to run `pnpm bindings`.
+    #[cfg(debug_assertions)]
+    if let Err(e) = bindings_export::export() {
+        tracing::warn!(error = ?e, "bindings export failed; continuing anyway");
+    }
+
+    let specta_builder = bindings_export::builder();
 
     tauri::Builder::default()
-        .setup(|_app| {
+        .invoke_handler(specta_builder.invoke_handler())
+        .setup(move |app| {
+            specta_builder.mount_events(app);
             tracing::info!("specdex window ready");
             Ok(())
         })

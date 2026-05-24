@@ -15,7 +15,8 @@
     "test:watch": "vitest",
     "tauri": "tauri",
     "tauri:dev": "tauri dev --config src-tauri/tauri.conf.json",
-    "tauri:build": "tauri build --config src-tauri/tauri.conf.json"
+    "tauri:build": "tauri build --config src-tauri/tauri.conf.json",
+    "bindings": "cargo run -p tauri_adapter --manifest-path src-tauri/Cargo.toml -- --export-bindings"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "1.1.1",
