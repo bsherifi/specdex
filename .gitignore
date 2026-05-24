@@ -40,6 +40,11 @@ src-tauri/gen/
 .vscode/
 .idea/
 
+# Playwright
+playwright-report/
+test-results/
+e2e/.cache/
+
 # RustRover
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
 #  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore

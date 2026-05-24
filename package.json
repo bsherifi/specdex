@@ -13,6 +13,8 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "bash scripts/run-e2e.sh",
+    "test:e2e:update": "bash scripts/run-e2e.sh --update-snapshots",
     "tauri": "tauri",
     "tauri:dev": "tauri dev --config src-tauri/tauri.conf.json",
     "tauri:build": "tauri build --config src-tauri/tauri.conf.json",
