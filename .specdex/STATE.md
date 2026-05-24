@@ -19,7 +19,7 @@ Status values: `pending` | `done` | `blocked`. Only the loop edits these.
 ## Plans (topological order)
 
 - [x] 01 wave0-cargo-workspace        status=done     prereqs=()
-- [ ] 02 wave0-tauri-shell             status=pending  prereqs=(01)
+- [x] 02 wave0-tauri-shell             status=done     prereqs=(01)
 - [ ] 03 wave0-ui-design-system        status=pending  prereqs=(01,02)
 - [ ] 04 wave0-tauri-specta-bridge     status=pending  prereqs=(01,02,03)
 - [ ] 05 wave0-test-harness            status=pending  prereqs=(01,02,03,04)
