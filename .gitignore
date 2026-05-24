@@ -13,6 +13,18 @@ target
 # Contains mutation testing data
 **/mutants.out*/
 
+# Overnight build loop — transient runtime artifacts (STATE.md/ITERATION_PROMPT.md/run-overnight.sh stay tracked)
+.specdex/run.log
+.specdex/DONE
+
+# Rust
+/target
+**/*.rs.bk
+Cargo.lock.bak
+
+# Tauri build artifacts (placeholder; plan 02 expands this)
+src-tauri/target
+
 # RustRover
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
 #  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
