@@ -27,7 +27,7 @@ Status values: `pending` | `done` | `blocked`. Only the loop edits these.
 - [x] 11 core-db-migrations            status=done     prereqs=(10)
 - [x] 14 core-document-parser-trait    status=done     prereqs=(10)
 - [x] 12 core-kb-repo                  status=done     prereqs=(10,11)
-- [ ] 13 core-entry-repo               status=pending  prereqs=(10,11,12)
+- [x] 13 core-entry-repo               status=done     prereqs=(10,11,12)
 - [ ] 15 core-ingest-pipeline          status=pending  prereqs=(10,11,12,13,14)
 - [ ] 16 core-scanner-aho-corasick     status=pending  prereqs=(10,11,12,13,14,15)
 - [ ] 17 core-tantivy-indexes          status=pending  prereqs=(10,11,12,13,14,15)
