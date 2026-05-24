@@ -1,16 +1,9 @@
 import type { JSX } from "react";
+import { DesignShowcase } from "@/dev/DesignShowcase";
+import { useSystemTheme } from "@/hooks/useSystemTheme";
 
 export function App(): JSX.Element {
-  return (
-    <main
-      style={{
-        display: "grid",
-        placeItems: "center",
-        minHeight: "100vh",
-        fontFamily: "system-ui, sans-serif",
-      }}
-    >
-      <h1>Specdex shell ready</h1>
-    </main>
-  );
+  // Side effect: keeps `dark` class on <html> in sync with system theme.
+  useSystemTheme();
+  return <DesignShowcase />;
 }

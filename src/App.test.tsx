@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest";
 import { App } from "./App";
 
 describe("App", () => {
-  it("renders the wave-0 marker banner", () => {
+  it("renders the design showcase header", () => {
     render(<App />);
-    expect(screen.getByText(/specdex shell ready/i)).toBeInTheDocument();
+    expect(screen.getByText(/Specdex Design System/i)).toBeInTheDocument();
   });
 });
