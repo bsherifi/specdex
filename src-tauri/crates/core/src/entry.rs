@@ -63,8 +63,74 @@ impl<'db> EntryRepo<'db> {
     pub fn new(db: &'db Db, events: &'db EventBus, identity_name: Option<String>) -> Self {
         Self { db, events, identity_name }
     }
-    // create / find / get / list / update / delete / bulk_delete land in
-    // tasks 3–7 inside this same impl block.
+
+    pub fn create(&self, args: CreateEntry) -> Result<CreateEntryResult> {
+        let kb_repo = KbRepo::new(self.db, self.events, self.identity_name.clone());
+        let kb = kb_repo.get(args.kb_id)?;
+        let primary_value = validate(&args.data, &kb.schema)
+            .map_err(map_validation_errs)?;
+
+        let aliases = Entry::normalize_aliases(args.aliases);
+        let id = EntryId::new();
+        let now = Utc::now();
+        let now_s = now.to_rfc3339();
+
+        let warning = self.db.with(|c| {
+            let existing: Option<String> = c
+                .query_row(
+                    "SELECT id FROM entries WHERE kb_id = ?1 AND primary_value = ?2 LIMIT 1",
+                    params![args.kb_id.to_string(), primary_value],
+                    |row| row.get(0),
+                )
+                .optional()?;
+            Ok(existing
+                .and_then(|s| s.parse::<EntryId>().ok())
+                .map(|existing_entry_id| SoftDuplicateWarning { existing_entry_id }))
+        })?;
+
+        self.db.with_mut(|conn| {
+            conn.execute(
+                "INSERT INTO entries
+                   (id, kb_id, primary_value, data_json, aliases_json,
+                    source_doc_id, source_page, source_bbox_json, source_text,
+                    notes, created_at, updated_at, edited_by)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?11, ?12)",
+                params![
+                    id.to_string(),
+                    args.kb_id.to_string(),
+                    primary_value,
+                    serde_json::to_string(&args.data)?,
+                    serde_json::to_string(&aliases)?,
+                    args.source.as_ref().map(|s| s.source_doc_id.to_string()),
+                    args.source.as_ref().map(|s| s.page),
+                    args.source
+                        .as_ref()
+                        .map(|s| serde_json::to_string(&s.bbox))
+                        .transpose()?,
+                    args.source.as_ref().map(|s| s.text.clone()),
+                    args.notes,
+                    now_s,
+                    self.identity_name,
+                ],
+            )?;
+            Ok(())
+        })?;
+
+        let entry = Entry {
+            id,
+            kb_id: args.kb_id,
+            primary_value,
+            data: args.data,
+            aliases,
+            source: args.source,
+            notes: args.notes,
+            created_at: now,
+            updated_at: now,
+            edited_by: self.identity_name.clone(),
+        };
+        self.events.emit(Event::EntryCreated { entry_id: entry.id, kb_id: entry.kb_id });
+        Ok(CreateEntryResult { entry, warning })
+    }
 }
 
 fn map_validation_errs(errs: Vec<EntryValidationError>) -> CoreError {
@@ -125,5 +191,70 @@ mod tests {
         m.insert("code".into(), json!(code));
         m.insert("definition".into(), json!(def));
         m
+    }
+
+    #[test]
+    fn create_returns_entry_with_normalized_aliases() {
+        let (db, ev) = fresh();
+        let kb_id = boeing_kb(&db, &ev);
+        let repo = EntryRepo::new(&db, &ev, Some("Sara".into()));
+        let res = repo
+            .create(CreateEntry {
+                kb_id,
+                data: data("BAC3082", "Surface prep"),
+                aliases: vec!["BAC-3082".into(), " BAC 3082 ".into(), "BAC-3082".into()],
+                source: None,
+                notes: None,
+            })
+            .unwrap();
+        assert_eq!(res.entry.primary_value, "BAC3082");
+        assert_eq!(res.entry.aliases, vec!["BAC-3082", "BAC 3082"]);
+        assert!(res.warning.is_none());
+    }
+
+    #[test]
+    fn create_warns_on_soft_duplicate() {
+        let (db, ev) = fresh();
+        let kb_id = boeing_kb(&db, &ev);
+        let repo = EntryRepo::new(&db, &ev, None);
+        let first = repo
+            .create(CreateEntry {
+                kb_id,
+                data: data("DUPE", "first"),
+                aliases: vec![],
+                source: None,
+                notes: None,
+            })
+            .unwrap();
+        assert!(first.warning.is_none());
+        let second = repo
+            .create(CreateEntry {
+                kb_id,
+                data: data("DUPE", "second"),
+                aliases: vec![],
+                source: None,
+                notes: None,
+            })
+            .unwrap();
+        assert_eq!(second.warning.as_ref().unwrap().existing_entry_id, first.entry.id);
+    }
+
+    #[test]
+    fn create_rejects_invalid_schema_data() {
+        let (db, ev) = fresh();
+        let kb_id = boeing_kb(&db, &ev);
+        let repo = EntryRepo::new(&db, &ev, None);
+        let mut bad = EntryData::new();
+        bad.insert("definition".into(), json!("?"));
+        let err = repo
+            .create(CreateEntry {
+                kb_id,
+                data: bad,
+                aliases: vec![],
+                source: None,
+                notes: None,
+            })
+            .unwrap_err();
+        assert!(matches!(err, CoreError::Validation(_)));
     }
 }
