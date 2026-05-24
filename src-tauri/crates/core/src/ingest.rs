@@ -1,7 +1,6 @@
 //! `ingest_file` — copy → parse → persist → emit. §12.
 
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
 
 use sha2::{Digest, Sha256};
 
@@ -26,23 +25,21 @@ pub struct IngestArgs {
 pub fn ingest_file(
     db: &Db,
     app_data: &AppDataDir,
-    parser: Arc<dyn DocumentParser>,
+    parser: &dyn DocumentParser,
     events: &EventBus,
     args: IngestArgs,
 ) -> Result<SourceDocument> {
     let original_name = args
         .source_path
         .file_name()
-        .map(|s| s.to_string_lossy().to_string())
-        .unwrap_or_else(|| "unknown.pdf".into());
+        .map_or_else(|| "unknown.pdf".into(), |s| s.to_string_lossy().to_string());
 
     // 1. Copy file into docs/<doc_id>.pdf.
     let doc_id = SourceDocId::new();
     let ext = args
         .source_path
         .extension()
-        .map(|s| s.to_string_lossy().to_string())
-        .unwrap_or_else(|| "pdf".into());
+        .map_or_else(|| "pdf".into(), |s| s.to_string_lossy().to_string());
     let rel = app_data.doc_relative_path(doc_id, &ext);
     let abs = app_data.root().join(&rel);
     if let Some(parent) = abs.parent() {
@@ -135,11 +132,11 @@ mod tests {
         let db = Db::open(app.db_path()).unwrap();
         let ev = EventBus::new();
         let mut rx = ev.subscribe();
-        let parser: Arc<dyn DocumentParser> = Arc::new(AnyPathMock);
+        let parser = AnyPathMock;
         let doc = ingest_file(
             &db,
             &app,
-            parser,
+            &parser,
             &ev,
             IngestArgs {
                 source_path: src,
@@ -171,15 +168,15 @@ mod tests {
         let src = write_pdf(tmp.path());
         let db = Db::open(app.db_path()).unwrap();
         let ev = EventBus::new();
-        let parser: Arc<dyn DocumentParser> = Arc::new(AnyPathMock);
+        let parser = AnyPathMock;
         let make_args = || IngestArgs {
             source_path: src.clone(),
             ocr: false,
             job_id: JobId::new(),
             identity_name: None,
         };
-        let a = ingest_file(&db, &app, parser.clone(), &ev, make_args()).unwrap();
-        let b = ingest_file(&db, &app, parser, &ev, make_args()).unwrap();
+        let a = ingest_file(&db, &app, &parser, &ev, make_args()).unwrap();
+        let b = ingest_file(&db, &app, &parser, &ev, make_args()).unwrap();
         assert_ne!(a.id, b.id);
         assert_eq!(SourceDocRepo::new(&db).list_recent(10).unwrap().len(), 2);
     }

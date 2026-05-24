@@ -101,8 +101,10 @@ impl<'db> SourceDocRepo<'db> {
 
     pub fn delete(&self, id: SourceDocId) -> Result<()> {
         self.db.with_mut(|conn| {
-            let affected =
-                conn.execute("DELETE FROM source_documents WHERE id = ?1", [id.to_string()])?;
+            let affected = conn.execute(
+                "DELETE FROM source_documents WHERE id = ?1",
+                [id.to_string()],
+            )?;
             if affected == 0 {
                 return Err(CoreError::NotFound(format!("source_doc={id}")));
             }
@@ -129,7 +131,9 @@ fn map_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<SourceDocument> {
         rusqlite::Error::FromSqlConversionFailure(0, rusqlite::types::Type::Text, e)
     };
     let id: String = row.get(0)?;
-    let id = id.parse::<SourceDocId>().map_err(|e| convert(Box::new(e)))?;
+    let id = id
+        .parse::<SourceDocId>()
+        .map_err(|e| convert(Box::new(e)))?;
     let spans_json: String = row.get(7)?;
     let parsed_spans: Vec<TextSpan> =
         serde_json::from_str(&spans_json).map_err(|e| convert(Box::new(e)))?;
