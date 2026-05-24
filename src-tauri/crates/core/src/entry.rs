@@ -131,6 +131,77 @@ impl<'db> EntryRepo<'db> {
         self.events.emit(Event::EntryCreated { entry_id: entry.id, kb_id: entry.kb_id });
         Ok(CreateEntryResult { entry, warning })
     }
+
+    pub fn find(&self, id: EntryId) -> Result<Option<Entry>> {
+        self.db.with(|conn| {
+            let row = conn
+                .query_row(SELECT_ENTRY, [id.to_string()], map_entry_row)
+                .optional()?;
+            Ok(row)
+        })
+    }
+
+    pub fn get(&self, id: EntryId) -> Result<Entry> {
+        self.find(id)?.ok_or_else(|| CoreError::NotFound(format!("entry={id}")))
+    }
+}
+
+const SELECT_ENTRY: &str = "
+SELECT id, kb_id, primary_value, data_json, aliases_json,
+       source_doc_id, source_page, source_bbox_json, source_text,
+       notes, created_at, updated_at, edited_by
+FROM entries WHERE id = ?1";
+
+fn map_entry_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<Entry> {
+    let convert =
+        |e: Box<dyn std::error::Error + Send + Sync>| -> rusqlite::Error {
+            rusqlite::Error::FromSqlConversionFailure(0, rusqlite::types::Type::Text, e)
+        };
+    let id: String = row.get(0)?;
+    let id = id.parse::<EntryId>().map_err(|e| convert(Box::new(e)))?;
+    let kb_id: String = row.get(1)?;
+    let kb_id = kb_id.parse::<KbId>().map_err(|e| convert(Box::new(e)))?;
+    let data_json: String = row.get(3)?;
+    let data: EntryData = serde_json::from_str(&data_json).map_err(|e| convert(Box::new(e)))?;
+    let aliases_json: String = row.get(4)?;
+    let aliases: Vec<String> = serde_json::from_str(&aliases_json).map_err(|e| convert(Box::new(e)))?;
+    let source_doc_id: Option<String> = row.get(5)?;
+    let source_page: Option<u32> = row.get(6)?;
+    let source_bbox_json: Option<String> = row.get(7)?;
+    let source_text: Option<String> = row.get(8)?;
+    let source = match (source_doc_id, source_page, source_bbox_json) {
+        (Some(sid), Some(p), Some(bbox_s)) => {
+            let sid = sid.parse::<SourceDocId>().map_err(|e| convert(Box::new(e)))?;
+            let bbox: BBox = serde_json::from_str(&bbox_s).map_err(|e| convert(Box::new(e)))?;
+            Some(SourceRef {
+                source_doc_id: sid,
+                page: p,
+                bbox,
+                text: source_text.unwrap_or_default(),
+            })
+        }
+        _ => None,
+    };
+    let created_at: String = row.get(10)?;
+    let updated_at: String = row.get(11)?;
+    let created_at = created_at
+        .parse::<chrono::DateTime<chrono::Utc>>()
+        .map_err(|e| convert(Box::new(e)))?;
+    let updated_at = updated_at
+        .parse::<chrono::DateTime<chrono::Utc>>()
+        .map_err(|e| convert(Box::new(e)))?;
+    Ok(Entry {
+        id,
+        kb_id,
+        primary_value: row.get(2)?,
+        data,
+        aliases,
+        source,
+        notes: row.get(9)?,
+        created_at,
+        updated_at,
+        edited_by: row.get(12)?,
+    })
 }
 
 fn map_validation_errs(errs: Vec<EntryValidationError>) -> CoreError {
@@ -256,5 +327,15 @@ mod tests {
             })
             .unwrap_err();
         assert!(matches!(err, CoreError::Validation(_)));
+    }
+
+    #[test]
+    fn get_returns_not_found_for_unknown_id() {
+        let (db, ev) = fresh();
+        let _kb_id = boeing_kb(&db, &ev);
+        let repo = EntryRepo::new(&db, &ev, None);
+        let ghost = EntryId::new();
+        let err = repo.get(ghost).unwrap_err();
+        assert!(matches!(err, CoreError::NotFound(_)));
     }
 }
