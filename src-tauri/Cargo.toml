@@ -36,6 +36,19 @@ strip = "symbols"
 opt-level = 0
 debug = 1
 
+# ocrs and its rten* deps are CPU-bound CNNs; release-mode optimization is
+# mandatory or OCR becomes hundreds of times slower (per ocrs's own README).
+# Override the `dev` profile so `cargo test` against real OCR fixtures stays
+# usable. Profile overrides only take effect from the workspace root.
+[profile.dev.package.ocrs]
+opt-level = 3
+[profile.dev.package.rten]
+opt-level = 3
+[profile.dev.package.rten-imageproc]
+opt-level = 3
+[profile.dev.package.rten-tensor]
+opt-level = 3
+
 [workspace.dependencies]
 # Tauri 2 — pinned to the 2.x series; minor bumps within 2.x are acceptable.
 tauri = { version = "2", features = [] }

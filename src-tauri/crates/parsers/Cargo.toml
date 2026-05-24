@@ -33,9 +33,11 @@ thiserror = { workspace = true }
 tracing = { workspace = true }
 specta = { workspace = true }
 sha2 = "0.10"
-pdfium-render = { version = "0.8", optional = true }
+# `sync` enables pdfium-render's `unsafe impl Send + Sync for Pdfium`, required
+# because `DocumentParser` is `Send + Sync`. It also pulls in `thread_safe`.
+pdfium-render = { version = "0.8", optional = true, features = ["sync"] }
 ocrs = { version = "0.10", optional = true }
-rten = { version = "0.20", optional = true }
+rten = { version = "0.21", optional = true }
 image = { version = "0.25", optional = true, default-features = false, features = ["png"] }
 
 [dev-dependencies]

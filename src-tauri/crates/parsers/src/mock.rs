@@ -3,9 +3,10 @@
 //! Used in ingest tests + scanner tests + frontend Tauri-driver flows where
 //! we don't want to ship a real PDF.
 //!
-//! Synthetic bbox/page math casts integer lengths to `f32`; the precision loss
-//! is irrelevant for fixture geometry.
-#![allow(clippy::cast_precision_loss)]
+//! Synthetic bbox/page math casts integer lengths to `f32` and small `usize`
+//! page counts to `u32`; the precision loss / truncation is irrelevant for
+//! fixture geometry.
+#![allow(clippy::cast_precision_loss, clippy::cast_possible_truncation)]
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};

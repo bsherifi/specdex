@@ -20,7 +20,7 @@ tauri-build = { workspace = true }
 
 [dependencies]
 specdex_core = { path = "../core" }
-specdex_parsers = { path = "../parsers" }
+specdex_parsers = { path = "../parsers", features = ["real-parsers"] }
 tauri = { workspace = true }
 specta = { workspace = true }
 tauri-specta = { workspace = true }
