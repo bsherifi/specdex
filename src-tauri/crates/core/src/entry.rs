@@ -144,6 +144,42 @@ impl<'db> EntryRepo<'db> {
     pub fn get(&self, id: EntryId) -> Result<Entry> {
         self.find(id)?.ok_or_else(|| CoreError::NotFound(format!("entry={id}")))
     }
+
+    pub fn list(&self, args: ListEntries) -> Result<Vec<Entry>> {
+        self.db.with(|conn| {
+            let mut sql = String::from(
+                "SELECT id, kb_id, primary_value, data_json, aliases_json,
+                        source_doc_id, source_page, source_bbox_json, source_text,
+                        notes, created_at, updated_at, edited_by
+                 FROM entries WHERE kb_id = ?1",
+            );
+            let mut params_vec: Vec<Box<dyn rusqlite::ToSql>> = vec![Box::new(args.kb_id.to_string())];
+            if let Some(ref f) = args.filter {
+                sql.push_str(" AND (primary_value LIKE ?2 OR data_json LIKE ?2)");
+                let pat = format!("%{f}%");
+                params_vec.push(Box::new(pat));
+            }
+            if let Some(sid) = args.source_doc_id {
+                let placeholder = format!(" AND source_doc_id = ?{}", params_vec.len() + 1);
+                sql.push_str(&placeholder);
+                params_vec.push(Box::new(sid.to_string()));
+            }
+            sql.push_str(" ORDER BY primary_value ASC");
+            if let Some(l) = args.limit {
+                sql.push_str(&format!(" LIMIT {l}"));
+            }
+            if let Some(o) = args.offset {
+                sql.push_str(&format!(" OFFSET {o}"));
+            }
+            let mut stmt = conn.prepare(&sql)?;
+            let param_refs: Vec<&dyn rusqlite::ToSql> =
+                params_vec.iter().map(|b| b.as_ref()).collect();
+            let rows = stmt
+                .query_map(rusqlite::params_from_iter(param_refs), map_entry_row)?
+                .collect::<rusqlite::Result<Vec<_>>>()?;
+            Ok(rows)
+        })
+    }
 }
 
 const SELECT_ENTRY: &str = "
@@ -337,5 +373,32 @@ mod tests {
         let ghost = EntryId::new();
         let err = repo.get(ghost).unwrap_err();
         assert!(matches!(err, CoreError::NotFound(_)));
+    }
+
+    #[test]
+    fn list_filters_by_substring_and_returns_alphabetical() {
+        let (db, ev) = fresh();
+        let kb_id = boeing_kb(&db, &ev);
+        let repo = EntryRepo::new(&db, &ev, None);
+        for c in ["BAC5050", "BAC3082", "AMS-C-5541"] {
+            repo.create(CreateEntry {
+                kb_id,
+                data: data(c, "x"),
+                aliases: vec![],
+                source: None,
+                notes: None,
+            })
+            .unwrap();
+        }
+        let list = repo
+            .list(ListEntries {
+                kb_id,
+                filter: Some("BAC".into()),
+                ..Default::default()
+            })
+            .unwrap();
+        assert_eq!(list.len(), 2);
+        assert_eq!(list[0].primary_value, "BAC3082");
+        assert_eq!(list[1].primary_value, "BAC5050");
     }
 }
