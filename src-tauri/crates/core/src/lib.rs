@@ -23,6 +23,7 @@ pub mod models;
 pub mod parse;
 pub mod scanner;
 pub mod schema_migration;
+pub mod search;
 pub mod source_doc;
 
 pub use error::CoreError;
