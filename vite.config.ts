@@ -32,6 +32,9 @@ export default defineConfig({
     emptyOutDir: true,
   },
   test: {
+    // Vitest owns unit/component tests under src/. Playwright owns e2e/ and
+    // drives the app via tauri-driver, so its specs must not be collected here.
+    include: ["src/**/*.{test,spec}.{ts,tsx}"],
     environment: "jsdom",
     globals: true,
     setupFiles: ["./src/test-setup.ts"],
