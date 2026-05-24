@@ -16,6 +16,7 @@ pub mod entry_validation;
 pub mod error;
 pub mod events;
 pub mod identity;
+pub mod jobs;
 pub mod kb;
 pub mod models;
 pub mod parse;
