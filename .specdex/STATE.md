@@ -23,7 +23,7 @@ Status values: `pending` | `done` | `blocked`. Only the loop edits these.
 - [x] 03 wave0-ui-design-system        status=done     prereqs=(01,02)
 - [x] 04 wave0-tauri-specta-bridge     status=done     prereqs=(01,02,03)
 - [x] 05 wave0-test-harness            status=done     prereqs=(01,02,03,04)
-- [ ] 10 core-models                   status=pending  prereqs=(01,02,03,04,05)
+- [x] 10 core-models                   status=done     prereqs=(01,02,03,04,05)
 - [ ] 11 core-db-migrations            status=pending  prereqs=(10)
 - [ ] 14 core-document-parser-trait    status=pending  prereqs=(10)
 - [ ] 12 core-kb-repo                  status=pending  prereqs=(10,11)
