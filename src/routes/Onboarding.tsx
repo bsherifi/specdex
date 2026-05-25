@@ -3,9 +3,12 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/shared";
-import { TEMPLATES, type KbTemplate } from "@/dev/templates";
-import type { KbColorName } from "@/lib/theme";
+import { KbColorPicker } from "@/components/KbColorPicker";
+import { TEMPLATES, EMPTY_TEMPLATE, type KbTemplate } from "@/dev/templates";
+import { identitySet, kbCreate } from "@/lib/tauri";
+import { KB_COLOR_HEX, type KbColorName } from "@/lib/theme";
 
 type Step = 0 | 1 | 2 | 3;
 
@@ -16,20 +19,32 @@ export default function Onboarding(): JSX.Element {
   const [kbName, setKbName] = useState(chosenTpl.name);
   const [kbDesc, setKbDesc] = useState(chosenTpl.description);
   const [color, setColor] = useState<KbColorName>("amber");
-  const { push: _push } = useToast();
+  const { push } = useToast();
   const navigate = useNavigate();
 
-  // The fields above become useful in Tasks 4–6; suppress unused-warning until then.
-  void chosenTpl;
-  void setChosenTpl;
-  void kbName;
-  void setKbName;
-  void kbDesc;
-  void setKbDesc;
-  void color;
-  void setColor;
-  void _push;
+  // navigate becomes useful in Task 6 (Done step); suppress unused-warning until then.
   void navigate;
+
+  const pickTemplate = (t: KbTemplate) => {
+    setChosenTpl(t);
+    setKbName(t.name);
+    setKbDesc(t.description);
+  };
+
+  const finish = async () => {
+    try {
+      await identitySet(name.trim());
+      await kbCreate({
+        name: kbName,
+        description: kbDesc || null,
+        schema: chosenTpl.schema,
+        highlight_color: KB_COLOR_HEX[color],
+      });
+      setStep(3);
+    } catch (e) {
+      push({ title: "Onboarding failed", description: String(e), variant: "error" });
+    }
+  };
 
   return (
     <div className="mx-auto grid min-h-screen max-w-xl place-items-center p-6">
@@ -60,6 +75,41 @@ export default function Onboarding(): JSX.Element {
             <div className="flex justify-between">
               <Button variant="outline" onClick={() => setStep(0)}>Back</Button>
               <Button onClick={() => setStep(2)} disabled={!name.trim()}>Next</Button>
+            </div>
+          </>
+        )}
+
+        {step === 2 && (
+          <>
+            <h2 className="text-lg font-semibold">Create your first knowledge base</h2>
+            <div className="space-y-3">
+              <div>
+                <label className="text-sm font-medium">Template</label>
+                <div className="mt-1 grid grid-cols-2 gap-2">
+                  {[...TEMPLATES, EMPTY_TEMPLATE].map((t) => (
+                    <button
+                      key={t.id}
+                      onClick={() => pickTemplate(t)}
+                      className={`rounded-md border p-2 text-left text-sm ${
+                        chosenTpl.id === t.id ? "border-primary" : "border-border"
+                      }`}
+                    >
+                      <div className="font-medium">{t.name}</div>
+                      <div className="text-xs text-muted-foreground">{t.description}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <Input value={kbName} onChange={(e) => setKbName(e.target.value)} placeholder="KB name" />
+              <Textarea value={kbDesc} onChange={(e) => setKbDesc(e.target.value)} placeholder="Description" />
+              <div>
+                <div className="mb-2 text-sm">Highlight color</div>
+                <KbColorPicker value={color} onChange={setColor} />
+              </div>
+            </div>
+            <div className="flex justify-between">
+              <Button variant="outline" onClick={() => setStep(1)}>Back</Button>
+              <Button onClick={() => void finish()} disabled={!kbName.trim()}>Create</Button>
             </div>
           </>
         )}

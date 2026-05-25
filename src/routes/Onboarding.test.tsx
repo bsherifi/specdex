@@ -40,3 +40,19 @@ describe("Onboarding — Identity step", () => {
     expect(next).not.toBeDisabled();
   });
 });
+
+describe("Onboarding — KB-create step", () => {
+  it("calls identitySet then kbCreate on Create click", async () => {
+    const { identitySet, kbCreate } = await import("@/lib/tauri");
+    renderOnboarding();
+    fireEvent.click(screen.getByRole("button", { name: "Next" })); // 0 → 1
+    fireEvent.change(screen.getByPlaceholderText(/Sara Chen/i), { target: { value: "Sara" } });
+    fireEvent.click(screen.getByRole("button", { name: "Next" })); // 1 → 2
+    // The KB name pre-fills from the chosen template.
+    fireEvent.click(screen.getByRole("button", { name: /Create/ }));
+    await waitFor(() => {
+      expect(identitySet).toHaveBeenCalledWith("Sara");
+      expect(kbCreate).toHaveBeenCalled();
+    });
+  });
+});
