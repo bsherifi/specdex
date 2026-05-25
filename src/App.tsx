@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { RouterProvider } from "react-router-dom";
 import { router } from "@/router";
 import { ToastHost } from "@/components/shared";
+import { IngestQueuePanel, PreIngestDialog } from "@/components/IngestQueue";
 import { useSystemTheme } from "@/hooks/useSystemTheme";
 import { subscribeToSpecdexEvents } from "@/lib/events";
 
@@ -18,6 +19,8 @@ export function App(): JSX.Element {
   return (
     <ToastHost>
       <RouterProvider router={router} />
+      <PreIngestDialog />
+      <IngestQueuePanel />
     </ToastHost>
   );
 }

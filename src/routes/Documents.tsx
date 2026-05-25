@@ -14,7 +14,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { EmptyState, ConfirmModal, useToast } from "@/components/shared";
 import { FileDropZone } from "@/components/FileDropZone";
-import { sourceDocListRecent, sourceDocDelete, ingestFiles } from "@/lib/tauri";
+import { useStore } from "@/lib/store";
+import { sourceDocListRecent, sourceDocDelete } from "@/lib/tauri";
 
 interface DocRow {
   id: string;
@@ -43,6 +44,7 @@ export default function Documents(): JSX.Element {
   const [confirm, setConfirm] = useState<{ open: boolean; ids: string[] }>({ open: false, ids: [] });
   const { push } = useToast();
   const navigate = useNavigate();
+  const setPending = useStore((s) => s.setPendingIngest);
 
   const reload = async () => {
     setDocs(unwrap<DocRow[]>(await sourceDocListRecent(500)));
@@ -75,19 +77,10 @@ export default function Documents(): JSX.Element {
       return next;
     });
 
-  const handleDrop = async (paths: string[]) => {
+  const handleDrop = (paths: string[]) => {
     if (paths.length === 0) return;
     const limited = paths.slice(0, 50); // §25 default cap
-    try {
-      unwrap(await ingestFiles({ files: limited.map((p) => ({ path: p, ocr: false })) }));
-      push({
-        title: "Ingest started",
-        description: `${limited.length} file(s) queued.`,
-        variant: "info",
-      });
-    } catch (e) {
-      push({ title: "Ingest failed", description: String(e), variant: "error" });
-    }
+    setPending(limited.map((p) => ({ path: p, filename: p.split(/[/\\]/).pop() ?? p })));
   };
 
   const bulkDelete = async () => {
