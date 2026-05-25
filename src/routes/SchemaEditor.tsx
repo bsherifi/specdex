@@ -88,14 +88,17 @@ export default function SchemaEditor(): JSX.Element {
   };
 
   return (
-    <div>
-      <Button variant="ghost" onClick={() => navigate(`/kbs/${id}`)}>
-        <ArrowLeft className="mr-2 h-4 w-4" /> Back to KB
-      </Button>
-      <h1 className="mt-2 text-2xl font-semibold">Schema</h1>
-      <div className="mt-4 space-y-3">
+    <div className="space-y-4">
+      <div>
+        <Button variant="ghost" size="sm" className="-ml-2" onClick={() => navigate(`/kbs/${id}`)}>
+          <ArrowLeft /> Back to KB
+        </Button>
+        <h1 className="mt-2 text-2xl font-semibold tracking-tight">Schema</h1>
+        <p className="text-sm text-muted-foreground">{kbName}</p>
+      </div>
+      <div className="space-y-3">
         {draft.fields.map((f, i) => (
-          <div key={i}>
+          <div key={i} className="space-y-1">
             <FieldEditor
               field={f}
               index={i}
@@ -105,10 +108,10 @@ export default function SchemaEditor(): JSX.Element {
               onRemove={() => remove(i)}
               onSetPrimary={() => setPrimary(i)}
             />
-            <details className="mt-1 text-xs text-muted-foreground">
-              <summary>Advanced: renamed from</summary>
+            <details className="px-1 text-xs text-muted-foreground">
+              <summary className="cursor-pointer select-none">Advanced: renamed from</summary>
               <input
-                className="rounded border border-border bg-background px-2 py-1"
+                className="mt-1 h-8 rounded-md border border-input bg-transparent px-2 text-xs shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] dark:bg-input/30"
                 placeholder="Old field name (if renamed)"
                 value={f._renamed_from ?? ""}
                 onChange={(e) => setRenameHint(i, e.target.value || null)}
@@ -117,12 +120,12 @@ export default function SchemaEditor(): JSX.Element {
           </div>
         ))}
       </div>
-      <div className="mt-4 flex items-center gap-2">
+      <div className="flex items-center gap-2">
         <Button
           variant="outline"
           onClick={() => setDraft({ ...draft, fields: [...draft.fields, NEW_FIELD(draft.fields.length + 1)] })}
         >
-          <Plus className="mr-2 h-4 w-4" /> Add field
+          <Plus /> Add field
         </Button>
         <Button onClick={() => setConfirm(true)} disabled={isEmpty(d)}>
           Save…

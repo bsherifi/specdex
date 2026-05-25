@@ -6,6 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Field } from "./Field";
 
 interface Props {
   label: string;
@@ -18,13 +19,9 @@ interface Props {
 
 export function SelectField({ label, value, options, onChange, required, error }: Props): JSX.Element {
   return (
-    <label className="flex flex-col gap-1 text-sm">
-      <span>
-        {label}
-        {required && <span className="text-destructive">*</span>}
-      </span>
+    <Field label={label} required={required} error={error}>
       <Select value={value} onValueChange={onChange}>
-        <SelectTrigger>
+        <SelectTrigger aria-invalid={error ? true : undefined}>
           <SelectValue placeholder="Select…" />
         </SelectTrigger>
         <SelectContent>
@@ -35,7 +32,6 @@ export function SelectField({ label, value, options, onChange, required, error }
           ))}
         </SelectContent>
       </Select>
-      {error && <span className="text-xs text-destructive">{error}</span>}
-    </label>
+    </Field>
   );
 }

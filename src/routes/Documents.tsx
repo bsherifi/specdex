@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { EmptyState, ConfirmModal } from "@/components/shared";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { FileDropZone } from "@/components/FileDropZone";
 import { useStore } from "@/lib/store";
@@ -123,7 +124,7 @@ export default function Documents(): JSX.Element {
         />
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={() => void browse()}>
-            <Upload className="mr-2 h-4 w-4" />
+            <Upload />
             Browse PDFs
           </Button>
           {selection.size > 0 && (
@@ -131,7 +132,7 @@ export default function Documents(): JSX.Element {
               variant="destructive"
               onClick={() => setConfirm({ open: true, ids: Array.from(selection) })}
             >
-              <Trash2 className="mr-2 h-4 w-4" />
+              <Trash2 />
               Delete ({selection.size})
             </Button>
           )}
@@ -159,6 +160,7 @@ export default function Documents(): JSX.Element {
               <TableHead className="w-[40px]">
                 <input
                   type="checkbox"
+                  className="size-4 accent-primary"
                   checked={selection.size === filtered.length && filtered.length > 0}
                   onChange={(e) =>
                     setSelection(e.target.checked ? new Set(filtered.map((d) => d.id)) : new Set())
@@ -187,14 +189,17 @@ export default function Documents(): JSX.Element {
                 <TableCell onClick={(e) => e.stopPropagation()}>
                   <input
                     type="checkbox"
+                    className="size-4 accent-primary"
                     checked={selection.has(d.id)}
                     onChange={() => toggle(d.id)}
                   />
                 </TableCell>
                 <TableCell className="font-medium">{d.filename}</TableCell>
-                <TableCell>{d.page_count}</TableCell>
-                <TableCell>{d.ocr_used ? "yes" : "—"}</TableCell>
-                <TableCell>{new Date(d.ingested_at).toLocaleString()}</TableCell>
+                <TableCell className="text-muted-foreground">{d.page_count}</TableCell>
+                <TableCell>
+                  {d.ocr_used ? <Badge variant="secondary">OCR</Badge> : <span className="text-muted-foreground">—</span>}
+                </TableCell>
+                <TableCell className="text-muted-foreground">{new Date(d.ingested_at).toLocaleString()}</TableCell>
               </TableRow>
             ))}
           </TableBody>

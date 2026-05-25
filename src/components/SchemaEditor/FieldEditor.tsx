@@ -27,8 +27,8 @@ const TYPES = [
 
 export function FieldEditor({ field, index, total, onChange, onMove, onRemove, onSetPrimary }: Props): JSX.Element {
   return (
-    <div className="rounded-md border border-border bg-card p-3">
-      <div className="flex items-center gap-2">
+    <div className="rounded-lg border bg-card p-3 shadow-sm">
+      <div className="flex flex-wrap items-center gap-2">
         <Input
           value={field.name}
           onChange={(e) => onChange({ ...field, name: e.target.value })}
@@ -61,18 +61,20 @@ export function FieldEditor({ field, index, total, onChange, onMove, onRemove, o
           </SelectContent>
         </Select>
 
-        <label className="ml-2 inline-flex items-center gap-1 text-sm">
+        <label className="ml-2 inline-flex items-center gap-1.5 text-sm">
           <input
             type="checkbox"
+            className="size-4 accent-primary"
             checked={field.required}
             onChange={(e) => onChange({ ...field, required: e.target.checked })}
           />
           Required
         </label>
 
-        <label className="ml-2 inline-flex items-center gap-1 text-sm">
+        <label className="ml-2 inline-flex items-center gap-1.5 text-sm">
           <input
             type="radio"
+            className="size-4 accent-primary"
             checked={field.primary}
             onChange={onSetPrimary}
             name="primary"

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { JSX } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Search as SearchIcon } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -148,14 +149,18 @@ export default function Search(): JSX.Element {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <Input
-        ref={inputRef}
-        placeholder="Search entries and documents… (press /)"
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        onKeyDown={onKeyOnList}
-        autoFocus
-      />
+      <div className="relative">
+        <SearchIcon className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          ref={inputRef}
+          placeholder="Search entries and documents… (press /)"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          onKeyDown={onKeyOnList}
+          autoFocus
+          className="pl-9"
+        />
+      </div>
       <Tabs value={tab} onValueChange={(v) => setTab(v as "entries" | "docs")} className="mt-4">
         <TabsList>
           <TabsTrigger value="entries">Entries ({entryHits.length})</TabsTrigger>
@@ -180,7 +185,7 @@ export default function Search(): JSX.Element {
                   key={h.entry_id}
                   to={`/kbs/${h.kb_id}#entry-${h.entry_id}`}
                   className={cn(
-                    "rounded-md border border-border bg-card p-3 hover:bg-accent",
+                    "rounded-lg border bg-card p-3 transition-colors hover:bg-accent/50",
                     i === active && "ring-2 ring-ring",
                   )}
                 >
@@ -206,7 +211,7 @@ export default function Search(): JSX.Element {
                   key={h.source_doc_id}
                   to={`/documents/${h.source_doc_id}`}
                   className={cn(
-                    "block rounded-md border border-border bg-card p-3 hover:bg-accent",
+                    "block rounded-lg border bg-card p-3 transition-colors hover:bg-accent/50",
                     i === active && "ring-2 ring-ring",
                   )}
                 >

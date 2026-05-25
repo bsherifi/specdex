@@ -121,12 +121,16 @@ export function EntryForm({ kbId, entryId, initialCapture, onSaved, onCancel }: 
         />
       </div>
       <aside className="space-y-3">
-        <section>
-          <h3 className="mb-2 text-sm font-semibold">Aliases</h3>
+        <section className="rounded-xl border border-border/40 bg-muted/30 p-4">
+          <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Aliases
+          </h3>
           <AliasList value={aliases} onChange={setAliases} />
         </section>
-        <section>
-          <h3 className="mb-2 text-sm font-semibold">Source</h3>
+        <section className="rounded-xl border border-border/40 bg-muted/30 p-4">
+          <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Source
+          </h3>
           <SourceBackrefPanel source={source} />
         </section>
       </aside>

@@ -1,5 +1,6 @@
 import type { JSX } from "react";
 import { Input } from "@/components/ui/input";
+import { Field } from "./Field";
 
 interface Props {
   label: string;
@@ -14,17 +15,13 @@ interface Props {
 /// (The Tauri dialog API can be added in a follow-up if user feedback warrants.)
 export function ImageAttachmentField({ label, value, onChange, required, error }: Props): JSX.Element {
   return (
-    <label className="flex flex-col gap-1 text-sm">
-      <span>
-        {label}
-        {required && <span className="text-destructive">*</span>}
-      </span>
+    <Field label={label} required={required} error={error}>
       <Input
         placeholder="attachments/diagram.png"
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        aria-invalid={error ? true : undefined}
       />
-      {error && <span className="text-xs text-destructive">{error}</span>}
-    </label>
+    </Field>
   );
 }

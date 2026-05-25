@@ -13,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { EmptyState, KbBadge, ConfirmModal } from "@/components/shared";
+import { EmptyState, ConfirmModal } from "@/components/shared";
 import { toast } from "sonner";
 import { KbColorPicker } from "@/components/KbColorPicker";
 import { EntryForm } from "@/components/EntryForm";
@@ -96,6 +96,10 @@ export default function KbDetail(): JSX.Element {
     ...kb.schema.fields.filter((f) => !f.primary).slice(0, 4),
   ];
 
+  const kbColorName = (Object.entries(KB_COLOR_HEX).find(
+    ([, h]) => h === kb.highlight_color,
+  )?.[0] ?? "amber") as KbColorName;
+
   const setColor = async (name: KbColorName) => {
     try {
       unwrap(await kbUpdateMeta(kb.id, { highlight_color: KB_COLOR_HEX[name] }));
@@ -143,7 +147,7 @@ export default function KbDetail(): JSX.Element {
             />
           ) : (
             <h1
-              className="text-2xl font-semibold hover:underline"
+              className="cursor-pointer text-2xl font-semibold tracking-tight hover:underline"
               onClick={() => setEditName(true)}
             >
               {kb.name}
@@ -151,33 +155,35 @@ export default function KbDetail(): JSX.Element {
           )}
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span>{entries.length} entries</span>
+            <span aria-hidden="true">·</span>
             <button
-              className="inline-flex items-center gap-1 hover:underline"
+              className="inline-flex items-center gap-1.5 rounded-md hover:text-foreground"
               onClick={() => setColorOpen(true)}
+              title="Change highlight color"
             >
               <span
-                className="h-3 w-3 rounded-full"
+                className="size-3 rounded-full ring-2 ring-background"
                 style={{ backgroundColor: kb.highlight_color }}
               />
-              {kb.highlight_color}
+              <span className="capitalize">{kbColorName}</span>
             </button>
           </div>
-          {kb.description && <p className="text-muted-foreground">{kb.description}</p>}
+          {kb.description && <p className="text-sm text-muted-foreground">{kb.description}</p>}
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => navigate(`/kbs/${id}/schema`)}>
-            <Edit className="mr-2 h-4 w-4" /> Edit schema
+            <Edit /> Edit schema
           </Button>
           <Button onClick={() => setNewEntryOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" /> New entry
+            <Plus /> New entry
           </Button>
-          <Button variant="destructive" onClick={() => setConfirmKbDelete(true)}>
-            <Trash2 className="h-4 w-4" />
+          <Button variant="outline" size="icon" onClick={() => setConfirmKbDelete(true)} title="Delete KB">
+            <Trash2 />
           </Button>
         </div>
       </header>
 
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <Input
           placeholder="Filter entries…"
           value={filter}
@@ -186,13 +192,14 @@ export default function KbDetail(): JSX.Element {
         />
         {selection.size > 0 && (
           <Button variant="destructive" onClick={() => setConfirmDelete(true)}>
-            Delete {selection.size}
+            <Trash2 /> Delete {selection.size}
           </Button>
         )}
       </div>
 
       {entries.length === 0 ? (
         <EmptyState
+          icon={<Plus />}
           title="No entries"
           description="Open a PDF and highlight text to start adding entries."
         />
@@ -203,6 +210,7 @@ export default function KbDetail(): JSX.Element {
               <TableHead className="w-[40px]">
                 <input
                   type="checkbox"
+                  className="size-4 accent-primary"
                   checked={selection.size === entries.length && entries.length > 0}
                   onChange={(e) =>
                     setSelection(e.target.checked ? new Set(entries.map((x) => x.id)) : new Set())
@@ -218,9 +226,10 @@ export default function KbDetail(): JSX.Element {
           <TableBody>
             {entries.map((e) => (
               <TableRow key={e.id} id={`entry-${e.id}`}>
-                <TableCell>
+                <TableCell onClick={(ev) => ev.stopPropagation()}>
                   <input
                     type="checkbox"
+                    className="size-4 accent-primary"
                     checked={selection.has(e.id)}
                     onChange={() =>
                       setSelection((s) => {
@@ -236,15 +245,19 @@ export default function KbDetail(): JSX.Element {
                   <TableCell key={c.name}>
                     {c.primary ? (
                       <div className="inline-flex items-center gap-2">
-                        <KbBadge name={kb.name} color={"amber"} />
+                        <span
+                          aria-hidden="true"
+                          className="size-2 shrink-0 rounded-full"
+                          style={{ backgroundColor: kb.highlight_color }}
+                        />
                         <span className="font-medium">{e.primary_value}</span>
                       </div>
                     ) : (
-                      String(e.data[c.name] ?? "")
+                      <span className="text-muted-foreground">{String(e.data[c.name] ?? "")}</span>
                     )}
                   </TableCell>
                 ))}
-                <TableCell>{new Date(e.updated_at).toLocaleString()}</TableCell>
+                <TableCell className="text-muted-foreground">{new Date(e.updated_at).toLocaleString()}</TableCell>
               </TableRow>
             ))}
           </TableBody>

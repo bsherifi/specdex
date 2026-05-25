@@ -45,9 +45,9 @@ export default function KbList(): JSX.Element {
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Knowledge bases</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Knowledge bases</h1>
         <Button onClick={() => setDialog(true)}>
-          <Plus className="mr-2 h-4 w-4" /> New KB
+          <Plus /> New KB
         </Button>
       </div>
 
@@ -77,17 +77,18 @@ export default function KbList(): JSX.Element {
             <Link
               key={kb.id}
               to={`/kbs/${kb.id}`}
-              className="rounded-lg border border-border bg-card p-4 hover:bg-accent"
+              className="group rounded-xl border bg-card p-4 shadow-sm transition-colors hover:bg-accent/50"
             >
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="font-semibold">{kb.name}</h3>
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <h3 className="truncate font-semibold">{kb.name}</h3>
                   {kb.description && (
-                    <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{kb.description}</p>
+                    <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{kb.description}</p>
                   )}
                 </div>
-                <div
-                  className="h-4 w-4 rounded-full"
+                <span
+                  aria-hidden="true"
+                  className="mt-0.5 size-3 shrink-0 rounded-full ring-2 ring-background"
                   style={{ backgroundColor: kb.highlight_color }}
                 />
               </div>

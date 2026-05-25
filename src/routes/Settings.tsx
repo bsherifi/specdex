@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
-import type { JSX } from "react";
+import type { JSX, ReactNode } from "react";
 import { FolderOpen, RefreshCcw, Save, Upload } from "lucide-react";
 import { Link } from "react-router-dom";
 import { save, open } from "@tauri-apps/plugin-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import {
   backupExport,
@@ -98,117 +100,125 @@ export default function Settings(): JSX.Element {
     }
   };
 
-  if (!settings) return <div>Loading…</div>;
+  if (!settings)
+    return (
+      <div className="mx-auto w-full max-w-2xl space-y-4">
+        <Skeleton className="h-8 w-32" />
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-28 w-full rounded-xl" />
+        ))}
+      </div>
+    );
 
   return (
-    <div className="max-w-2xl space-y-8">
+    <div className="mx-auto w-full max-w-2xl space-y-4">
       <header>
-        <h1 className="text-2xl font-semibold">Settings</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
       </header>
 
-      <section className="space-y-2">
-        <h2 className="text-sm font-semibold uppercase text-muted-foreground">Application data</h2>
-        <div className="rounded-md border border-border p-3">
-          <div className="font-mono text-xs">{settings.data_dir}</div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="mt-2"
-            onClick={() => void openDataDir()}
-          >
-            <FolderOpen className="mr-2 h-4 w-4" /> Open in file manager
+      <Section title="Application data">
+        <div className="rounded-md border border-border/60 bg-muted/50 px-3 py-2 font-mono text-xs">
+          {settings.data_dir}
+        </div>
+        <Button variant="outline" size="sm" onClick={() => void openDataDir()}>
+          <FolderOpen /> Open in file manager
+        </Button>
+        <p className="text-xs text-muted-foreground">
+          Changing the data directory is not supported in v1.
+        </p>
+      </Section>
+
+      <Section title="Identity">
+        <p className="text-sm text-muted-foreground">
+          Current: <span className="font-medium text-foreground">{identityName || "—"}</span>
+        </p>
+        <div className="flex items-center gap-2">
+          <Input value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Display name" />
+          <Button onClick={() => void saveIdentity()}>Save</Button>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Stamped on every entry as <code>edited_by</code>.
+        </p>
+      </Section>
+
+      <Section title="OCR language data">
+        <p>Bundled: <code>eng</code>, <code>osd</code>.</p>
+        <p className="text-xs text-muted-foreground">
+          Additional language packs are a v1.1 download.
+        </p>
+      </Section>
+
+      <Section title="Backup & restore">
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" onClick={() => void onExport()}>
+            <Save /> Export full backup ZIP
           </Button>
-          <p className="mt-2 text-xs text-muted-foreground">
-            Changing the data directory is not supported in v1.
-          </p>
+          <Button variant="outline" onClick={() => void onRestore()}>
+            <Upload /> Restore from backup ZIP
+          </Button>
         </div>
-      </section>
+        <p className="text-xs text-muted-foreground">
+          Restoring replaces all data with the contents of the backup ZIP.
+        </p>
+      </Section>
 
-      <section className="space-y-2">
-        <h2 className="text-sm font-semibold uppercase text-muted-foreground">Identity</h2>
-        <div className="rounded-md border border-border p-3 space-y-2">
-          <p className="text-sm text-muted-foreground">
-            Current: <span className="font-medium text-foreground">{identityName || "—"}</span>
-          </p>
-          <div className="flex items-center gap-2">
-            <Input value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Display name" />
-            <Button onClick={() => void saveIdentity()}>Save</Button>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Stamped on every entry as <code>edited_by</code>.
-          </p>
-        </div>
-      </section>
-
-      <section className="space-y-2">
-        <h2 className="text-sm font-semibold uppercase text-muted-foreground">OCR language data</h2>
-        <div className="rounded-md border border-border p-3 text-sm">
-          <p>Bundled: <code>eng</code>, <code>osd</code>.</p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Additional language packs are a v1.1 download.
-          </p>
-        </div>
-      </section>
-
-      <section className="space-y-2">
-        <h2 className="text-sm font-semibold uppercase text-muted-foreground">Backup &amp; restore</h2>
-        <div className="rounded-md border border-border p-3 space-y-2">
-          <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => void onExport()}>
-              <Save className="mr-2 h-4 w-4" /> Export full backup ZIP
-            </Button>
-            <Button variant="outline" onClick={() => void onRestore()}>
-              <Upload className="mr-2 h-4 w-4" /> Restore from backup ZIP
-            </Button>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Restoring replaces all data with the contents of the backup ZIP.
-          </p>
-        </div>
-      </section>
-
-      <section className="space-y-2">
-        <h2 className="text-sm font-semibold uppercase text-muted-foreground">Diagnostics</h2>
-        <div className="rounded-md border border-border p-3 text-sm space-y-1">
+      <Section title="Diagnostics">
+        <div className="space-y-1 text-sm">
           <div>Tantivy: {settings.tantivy_version}</div>
           <div>PDFium: {settings.pdfium_version}</div>
           <div>ocrs: {settings.ocrs_version}</div>
-          <div className="mt-2 font-mono text-xs">{settings.log_dir}</div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => void revealInFileManager(settings.log_dir)}
-          >
-            <FolderOpen className="mr-2 h-4 w-4" /> Open log folder
-          </Button>
-          <div className="mt-3 rounded-md border border-emerald-500/40 bg-emerald-500/10 p-2 text-xs">
-            Specdex makes no outbound network requests.
-          </div>
+          <div className="pt-1 font-mono text-xs">{settings.log_dir}</div>
         </div>
-      </section>
-
-      <section className="space-y-2">
-        <h2 className="text-sm font-semibold uppercase text-muted-foreground">Onboarding</h2>
-        <div className="rounded-md border border-border p-3 text-sm">
-          <Link to="/onboarding" className="inline-flex items-center gap-2 text-primary underline">
-            <RefreshCcw className="h-4 w-4" /> Replay onboarding wizard
-          </Link>
+        <Button variant="outline" size="sm" onClick={() => void revealInFileManager(settings.log_dir)}>
+          <FolderOpen /> Open log folder
+        </Button>
+        <div className="rounded-md border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-700 dark:text-emerald-400">
+          Specdex makes no outbound network requests.
         </div>
-      </section>
+      </Section>
 
-      <section className="space-y-2">
-        <h2 className="text-sm font-semibold uppercase text-muted-foreground">About</h2>
-        <div className="rounded-md border border-border p-3 text-sm space-y-1">
+      <Section title="Onboarding">
+        <Link
+          to="/onboarding"
+          className="inline-flex items-center gap-2 text-sm text-primary underline-offset-4 hover:underline"
+        >
+          <RefreshCcw className="size-4" /> Replay onboarding wizard
+        </Link>
+      </Section>
+
+      <Section title="About">
+        <div className="space-y-1 text-sm">
           <div>Specdex</div>
           <div>
             License: MIT ·{" "}
-            <a className="underline" href="https://github.com/bsherifi/specdex">github.com/bsherifi/specdex</a>
+            <a className="underline-offset-4 hover:underline" href="https://github.com/bsherifi/specdex">
+              github.com/bsherifi/specdex
+            </a>
           </div>
           <div className="text-xs text-muted-foreground">
             Third-party licenses bundled at <code>THIRD-PARTY-LICENSES.txt</code> (added in plan 41).
           </div>
         </div>
-      </section>
+      </Section>
     </div>
+  );
+}
+
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: ReactNode;
+}): JSX.Element {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">{children}</CardContent>
+    </Card>
   );
 }
