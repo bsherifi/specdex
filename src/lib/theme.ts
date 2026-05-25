@@ -1,4 +1,4 @@
-import { KB_HIGHLIGHT_COLORS } from "../../tailwind.config";
+import { KB_HIGHLIGHT_COLORS } from "./kb-colors";
 
 export type KbColorName = keyof typeof KB_HIGHLIGHT_COLORS;
 export const KB_COLOR_NAMES = Object.keys(KB_HIGHLIGHT_COLORS) as KbColorName[];

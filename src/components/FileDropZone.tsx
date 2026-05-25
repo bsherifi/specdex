@@ -34,7 +34,7 @@ export function FileDropZone({ onFiles, children, className }: FileDropZoneProps
       className={className}
       data-drop-over={isOver}
       style={{
-        outline: isOver ? "2px dashed hsl(var(--ring))" : undefined,
+        outline: isOver ? "2px dashed var(--ring)" : undefined,
       }}
     >
       {children}

@@ -1,5 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { ThemeProvider } from "next-themes";
+import "@fontsource-variable/geist";
 import { App } from "./App";
 import "./styles/globals.css";
 
@@ -10,6 +12,8 @@ if (!rootEl) {
 
 createRoot(rootEl).render(
   <StrictMode>
-    <App />
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+      <App />
+    </ThemeProvider>
   </StrictMode>,
 );

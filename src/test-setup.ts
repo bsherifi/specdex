@@ -1,8 +1,8 @@
 import "@testing-library/jest-dom/vitest";
 
-// jsdom does not implement matchMedia, but useSystemTheme reads it on mount.
-// Provide a default light-mode stub so components that resolve the system theme
-// render in tests. Tests that exercise theme switching install their own mock.
+// jsdom does not implement matchMedia, but next-themes reads it on mount to
+// resolve the system theme. Provide a default light-mode stub so themed
+// components render in tests. Tests that exercise theme switching mock their own.
 if (!window.matchMedia) {
   Object.defineProperty(window, "matchMedia", {
     writable: true,

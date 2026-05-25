@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 import path from "node:path";
 
 // Tauri 2 dev requires a fixed dev-server port so the Rust process can wait
@@ -7,7 +8,7 @@ import path from "node:path";
 const TAURI_DEV_PORT = 1420;
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

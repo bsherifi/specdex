@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { Search, FileText, Database, Settings as SettingsIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFirstRunRedirect } from "@/hooks/useFirstRunRedirect";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const NAV = [
   { to: "/", label: "Search", icon: Search },
@@ -47,6 +48,9 @@ export function Layout(): JSX.Element {
             </NavLink>
           ))}
         </nav>
+        <div className="mt-auto pt-3">
+          <ThemeToggle />
+        </div>
       </aside>
       <main className="ml-48 min-h-screen p-6">
         <Outlet />
