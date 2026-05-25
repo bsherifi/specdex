@@ -39,10 +39,18 @@ export const test = base.extend<TauriFixtures>({
     // having started tauri-driver before pnpm exec playwright test runs.
     await use(null as unknown as ChildProcess);
   },
-  driver: async ({}, use) => {
+  driver: async ({}, use, testInfo) => {
+    const tmp = path.join(
+      require("os").tmpdir(),
+      `specdex-e2e-${testInfo.testId}-${Date.now()}`,
+    );
+    require("fs").mkdirSync(tmp, { recursive: true });
     const driver = new Builder()
       .withCapabilities({
-        "tauri:options": { application: SPECDEX_BIN },
+        "tauri:options": {
+          application: SPECDEX_BIN,
+          env: { SPECDEX_DATA_DIR: tmp },
+        },
         browserName: "wry",
       })
       .usingServer("http://127.0.0.1:4444")
@@ -51,6 +59,9 @@ export const test = base.extend<TauriFixtures>({
       await use(driver);
     } finally {
       await driver.quit();
+      try {
+        require("fs").rmSync(tmp, { recursive: true, force: true });
+      } catch {}
     }
   },
 });
