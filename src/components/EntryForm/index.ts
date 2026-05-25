@@ -1,1 +1,1 @@
-export { EntryFormPlaceholder as EntryForm } from "./EntryForm.placeholder";
+export { EntryForm } from "./EntryForm";
