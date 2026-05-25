@@ -5,7 +5,9 @@
 //! field changed) `ScanCacheInvalidated`.
 
 use chrono::Utc;
+use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
+use specta::Type;
 
 use crate::db::Db;
 use crate::events::EventBus;
@@ -21,7 +23,7 @@ pub struct MigrateSchema {
     pub initiated_by: Option<String>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct MigrationReport {
     pub diff: SchemaDiff,
     pub entries_rewritten: usize,

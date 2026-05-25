@@ -9,6 +9,214 @@
 export const commands = {
 async getAppVersion() : Promise<AppVersion> {
     return await TAURI_INVOKE("get_app_version");
+},
+async getAppSettings() : Promise<AppSettings> {
+    return await TAURI_INVOKE("get_app_settings");
+},
+async revealInFileManager(path: string) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("reveal_in_file_manager", { path }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async identityGet() : Promise<Result<Identity | null, CoreError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("identity_get") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async identitySet(displayName: string) : Promise<Result<Identity, CoreError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("identity_set", { displayName }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async kbCreate(args: CreateKbArgs) : Promise<Result<Kb, CoreError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("kb_create", { args }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async kbGet(kbId: KbId) : Promise<Result<Kb, CoreError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("kb_get", { kbId }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async kbList() : Promise<Result<Kb[], CoreError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("kb_list") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async kbListSummaries() : Promise<Result<KbSummary[], CoreError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("kb_list_summaries") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async kbUpdateMeta(kbId: KbId, patch: UpdateKbMetaArgs) : Promise<Result<Kb, CoreError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("kb_update_meta", { kbId, patch }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async kbDelete(kbId: KbId) : Promise<Result<null, CoreError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("kb_delete", { kbId }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async kbMigrateSchema(kbId: KbId, newSchema: Schema) : Promise<Result<MigrationReport, CoreError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("kb_migrate_schema", { kbId, newSchema }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async entryCreate(args: CreateEntryArgs) : Promise<Result<CreateEntryResult, CoreError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("entry_create", { args }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async entryGet(entryId: EntryId) : Promise<Result<Entry, CoreError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("entry_get", { entryId }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async entryList(args: ListEntriesArgs) : Promise<Result<Entry[], CoreError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("entry_list", { args }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async entryUpdate(entryId: EntryId, patch: UpdateEntryArgs) : Promise<Result<Entry, CoreError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("entry_update", { entryId, patch }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async entryDelete(entryId: EntryId) : Promise<Result<null, CoreError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("entry_delete", { entryId }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async entryBulkDelete(entryIds: EntryId[]) : Promise<Result<number, CoreError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("entry_bulk_delete", { entryIds }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async ingestFiles(args: IngestFilesArgs) : Promise<Result<IngestFilesResult, CoreError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("ingest_files", { args }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async sourceDocGet(sourceDocId: SourceDocId) : Promise<Result<SourceDocument, CoreError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("source_doc_get", { sourceDocId }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async sourceDocListRecent(limit: number) : Promise<Result<SourceDocument[], CoreError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("source_doc_list_recent", { limit }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async sourceDocDelete(sourceDocId: SourceDocId) : Promise<Result<null, CoreError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("source_doc_delete", { sourceDocId }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Absolute path on disk to a stored PDF. The frontend's pdf.js fetches via
+ * Tauri's asset protocol; this command returns the path the asset handler
+ * reads from.
+ */
+async sourceDocResolvePath(sourceDocId: SourceDocId) : Promise<Result<string, CoreError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("source_doc_resolve_path", { sourceDocId }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async scanDocument(sourceDocId: SourceDocId, scope: ScanScope) : Promise<Result<Match[], CoreError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("scan_document", { sourceDocId, scope }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async scannerInvalidate() : Promise<Result<null, CoreError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("scanner_invalidate") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async searchEntries(q: string, limit: number) : Promise<Result<EntryHit[], CoreError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("search_entries", { q, limit }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async searchSourceDocs(q: string, limit: number) : Promise<Result<SourceDocHit[], CoreError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("search_source_docs", { q, limit }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
 }
 }
 
@@ -22,7 +230,139 @@ async getAppVersion() : Promise<AppVersion> {
 
 /** user-defined types **/
 
+export type AppSettings = { data_dir: string; log_dir: string; pdfium_version: string; ocrs_version: string; tantivy_version: string }
 export type AppVersion = { app: string; git_short_sha: string | null }
+/**
+ * Bounding box in PDF points (origin top-left, y grows downward).
+ * All fields are f32 — sufficient precision for PDF coordinates and matches
+ * pdfium's native float width.
+ */
+export type BBox = { x: number; y: number; w: number; h: number }
+export type CoreError = { kind: "not_found"; data: string } | { kind: "conflict"; data: string } | { kind: "validation"; data: string } | { kind: "schema_validation"; data: SchemaValidationError } | { kind: "identity_validation"; data: IdentityValidationError } | { kind: "parse"; data: string } | { kind: "io"; data: string } | { kind: "db"; data: string } | { kind: "search"; data: string } | { kind: "internal"; data: string }
+export type CreateEntryArgs = { kb_id: KbId; data: Partial<{ [key in string]: JsonValue }>; aliases: string[]; source: SourceRef | null; notes: string | null }
+export type CreateEntryResult = { entry: Entry; warning: SoftDuplicateWarning | null }
+export type CreateKbArgs = { name: string; description: string | null; schema: Schema; highlight_color: string }
+export type Entry = { id: EntryId; kb_id: KbId; primary_value: string; data: Partial<{ [key in string]: JsonValue }>; aliases: string[]; source: SourceRef | null; notes: string | null; created_at: string; updated_at: string; edited_by: string | null }
+export type EntryHit = { entry_id: EntryId; kb_id: KbId; kb_name: string; primary_value: string; score: number }
+export type EntryId = string
+/**
+ * One field in a KB schema.
+ */
+export type FieldDef = { name: string; label: string; type: FieldType; required?: boolean; 
+/**
+ * `None` = use the default for this field type (`text`/`text_multiline` → true, else false).
+ */
+searchable?: boolean | null; 
+/**
+ * Exactly one field per schema has `primary == true`. Validated by
+ * `Schema::validate`.
+ */
+primary?: boolean; 
+/**
+ * Rename hint from the schema editor. Consumed by `diff()` then cleared
+ * before persistence.
+ */
+_renamed_from?: string | null }
+/**
+ * Set of field types Specdex supports in v1. See §11.3.
+ * 
+ * `entry_link` is intentionally absent — deferred to v1.1 per §11.3.
+ */
+export type FieldType = { kind: "text" } | { kind: "text_multiline" } | { kind: "number" } | { kind: "date" } | { kind: "select"; options: string[] } | { kind: "url" } | { kind: "image_attachment" }
+export type Identity = { display_name: string; created_at: string }
+export type IdentityValidationError = { code: "Empty" } | { code: "TooLong" }
+export type IngestFile = { path: string; ocr: boolean }
+export type IngestFilesArgs = { 
+/**
+ * Per-file: absolute path + opt-in OCR flag.
+ */
+files: IngestFile[] }
+export type IngestFilesResult = { job_ids: JobId[] }
+export type JobId = string
+export type JsonValue = null | boolean | number | string | JsonValue[] | Partial<{ [key in string]: JsonValue }>
+export type Kb = { id: KbId; name: string; description: string | null; schema: Schema; primary_field: string; searchable_fields: string[]; 
+/**
+ * Hex like `#FFD54F`. KB color picker (plan 25) validates this against
+ * the 8-color palette declared in `tailwind.config.ts`.
+ */
+highlight_color: string; created_at: string; updated_at: string; edited_by: string | null }
+export type KbId = string
+/**
+ * Lightweight version for list views — avoids shipping the full schema JSON
+ * in `GET /kbs` responses.
+ */
+export type KbSummary = { id: KbId; name: string; description: string | null; highlight_color: string; entry_count: number; updated_at: string }
+export type ListEntriesArgs = { kb_id: KbId; filter: string | null; source_doc_id: SourceDocId | null; limit: number | null; offset: number | null }
+/**
+ * One scanner hit. Page-and-bbox located via §13's offset→span resolver.
+ */
+export type Match = { entry_id: EntryId; kb_id: KbId; pattern_source: PatternSource; matched_text: string; start_offset: number; end_offset: number; page: number; bbox: BBox }
+export type MigrationReport = { diff: SchemaDiff; entries_rewritten: number; history_id: SchemaHistoryId }
+/**
+ * Whether the matched pattern is the entry's primary value or one of its
+ * aliases. Used by the viewer's hover card to label the match source.
+ */
+export type PatternSource = "primary" | "alias"
+/**
+ * Which KBs participate in scanning. Controlled by the document viewer's
+ * KB-scope dropdown (§7.3). v1 is single-select per §13.
+ */
+export type ScanScope = { kind: "all" } | { kind: "only"; kb_id: KbId }
+/**
+ * A KB's schema — an ordered list of field definitions.
+ */
+export type Schema = FieldDef[]
+/**
+ * Result of comparing two schemas — produced by `diff()`. Drives the
+ * migration-confirm modal (§15) and the migration executor (plan 12).
+ */
+export type SchemaDiff = { added: FieldDef[]; removed: FieldDef[]; 
+/**
+ * (`old_name`, `new_def`). New def carries `renamed_from` cleared.
+ */
+renamed: ([string, FieldDef])[]; type_changed: ([FieldDef, FieldDef])[]; primary_changed: [string, string] | null; options_changed: ([FieldDef, FieldDef])[] }
+export type SchemaHistoryId = string
+export type SchemaValidationError = { code: "Empty" } | { code: "PrimaryCount"; data: number } | { code: "PrimaryNotText"; data: string } | { code: "NotSnakeCase"; data: string } | { code: "Duplicate"; data: string } | { code: "EmptyLabel"; data: string } | { code: "SelectWithoutOptions"; data: string } | { code: "DuplicateSelectOption"; data: [string, string] }
+/**
+ * Soft-duplicate signal — same KB and same `primary_value` already exists.
+ * Returned from `create` alongside the new entry so the UI can warn.
+ */
+export type SoftDuplicateWarning = { existing_entry_id: EntryId }
+export type SourceDocHit = { source_doc_id: SourceDocId; filename: string; snippet_html: string; score: number }
+export type SourceDocId = string
+/**
+ * A source document row as stored. Mirrors §11.1 `source_documents`.
+ */
+export type SourceDocument = { id: SourceDocId; filename: string; 
+/**
+ * Path under app-data-dir's `docs/` subdir.
+ */
+stored_path: string; content_sha256: string; mime_type: string; page_count: number; parsed_text: string; parsed_spans: TextSpan[]; ocr_used: boolean; ingested_at: string; ingested_by: string | null }
+export type SourceRef = { source_doc_id: SourceDocId; page: number; bbox: BBox; 
+/**
+ * Selected text + ~200 chars of surrounding context. Displayed verbatim
+ * on the entry editor so the user knows where the entry came from.
+ */
+text: string }
+/**
+ * One contiguous span of layout-aware text on a page. Spans are
+ * non-overlapping, in reading order, and contiguous within a page.
+ */
+export type TextSpan = { 
+/**
+ * Byte offset of this span's first character in the parsed-document text.
+ */
+start_offset: number; 
+/**
+ * Byte offset of this span's last character + 1 in the parsed-document text.
+ */
+end_offset: number; 
+/**
+ * 1-indexed page number.
+ */
+page: number; bbox: BBox }
+export type UpdateEntryArgs = { data: Partial<{ [key in string]: JsonValue }> | null; aliases: string[] | null; source: SourceRef | null; notes: string | null }
+export type UpdateKbMetaArgs = { name: string | null; description: string | null; highlight_color: string | null }
 
 /** tauri-specta globals **/
 

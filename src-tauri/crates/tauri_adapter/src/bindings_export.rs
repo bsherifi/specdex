@@ -5,16 +5,47 @@ use std::path::PathBuf;
 use tauri::Wry;
 use tauri_specta::{collect_commands, collect_events, Builder};
 
-/// Builds the `tauri-specta` Builder with every Specdex command + event
-/// registered. Plan 20 extends `commands!` / `events!` to cover the full
-/// surface; plan 04 ships only `get_app_version`.
+/// Builds the `tauri-specta` Builder with every Specdex command registered.
+/// Events flow through the single `specdex://event` channel (see
+/// `event_forwarder`), so `collect_events!` stays empty.
 ///
-/// Commands are referenced by full path so the helper macros that
+/// Commands are referenced by full path so the helper types that
 /// `#[tauri::command]` / `#[specta::specta]` generate resolve correctly from
 /// this module.
 pub fn builder() -> Builder<Wry> {
+    use crate::commands::{
+        app, entry, identity, ingest, kb, scanner, search, settings, source_doc,
+    };
     Builder::<Wry>::new()
-        .commands(collect_commands![crate::commands::app::get_app_version])
+        .commands(collect_commands![
+            app::get_app_version,
+            settings::get_app_settings,
+            settings::reveal_in_file_manager,
+            identity::identity_get,
+            identity::identity_set,
+            kb::kb_create,
+            kb::kb_get,
+            kb::kb_list,
+            kb::kb_list_summaries,
+            kb::kb_update_meta,
+            kb::kb_delete,
+            kb::kb_migrate_schema,
+            entry::entry_create,
+            entry::entry_get,
+            entry::entry_list,
+            entry::entry_update,
+            entry::entry_delete,
+            entry::entry_bulk_delete,
+            ingest::ingest_files,
+            source_doc::source_doc_get,
+            ingest::source_doc_list_recent,
+            source_doc::source_doc_delete,
+            source_doc::source_doc_resolve_path,
+            scanner::scan_document,
+            scanner::scanner_invalidate,
+            search::search_entries,
+            search::search_source_docs,
+        ])
         .events(collect_events![])
 }
 

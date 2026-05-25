@@ -3,6 +3,8 @@
 
 use chrono::Utc;
 use rusqlite::{params, OptionalExtension};
+use serde::{Deserialize, Serialize};
+use specta::Type;
 
 use crate::db::Db;
 use crate::entry_validation::{validate, EntryValidationError};
@@ -42,12 +44,12 @@ pub struct ListEntries {
 
 /// Soft-duplicate signal — same KB and same `primary_value` already exists.
 /// Returned from `create` alongside the new entry so the UI can warn.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Type)]
 pub struct SoftDuplicateWarning {
     pub existing_entry_id: EntryId,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct CreateEntryResult {
     pub entry: Entry,
     pub warning: Option<SoftDuplicateWarning>,
