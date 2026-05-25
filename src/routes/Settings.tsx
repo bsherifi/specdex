@@ -124,6 +124,26 @@ export default function Settings(): JSX.Element {
           </p>
         </div>
       </section>
+
+      <section className="space-y-2">
+        <h2 className="text-sm font-semibold uppercase text-muted-foreground">Diagnostics</h2>
+        <div className="rounded-md border border-border p-3 text-sm space-y-1">
+          <div>Tantivy: {settings.tantivy_version}</div>
+          <div>PDFium: {settings.pdfium_version}</div>
+          <div>ocrs: {settings.ocrs_version}</div>
+          <div className="mt-2 font-mono text-xs">{settings.log_dir}</div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => void revealInFileManager(settings.log_dir)}
+          >
+            <FolderOpen className="mr-2 h-4 w-4" /> Open log folder
+          </Button>
+          <div className="mt-3 rounded-md border border-emerald-500/40 bg-emerald-500/10 p-2 text-xs">
+            Specdex makes no outbound network requests.
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

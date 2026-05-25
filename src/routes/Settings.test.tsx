@@ -84,3 +84,16 @@ describe("Settings — Backup card", () => {
     });
   });
 });
+
+describe("Settings — Diagnostics card", () => {
+  it("lists Tantivy / PDFium / ocrs versions + log folder + offline banner", async () => {
+    renderSettings();
+    await waitFor(() => {
+      expect(screen.getByText(/Tantivy:/i)).toBeInTheDocument();
+      expect(screen.getByText(/PDFium:/i)).toBeInTheDocument();
+      expect(screen.getByText(/ocrs:/i)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /Open log folder/i })).toBeInTheDocument();
+      expect(screen.getByText(/no outbound network requests/i)).toBeInTheDocument();
+    });
+  });
+});
