@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { JSX } from "react";
-import { FolderOpen, Save, Upload } from "lucide-react";
+import { FolderOpen, RefreshCcw, Save, Upload } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/shared";
@@ -141,6 +142,29 @@ export default function Settings(): JSX.Element {
           </Button>
           <div className="mt-3 rounded-md border border-emerald-500/40 bg-emerald-500/10 p-2 text-xs">
             Specdex makes no outbound network requests.
+          </div>
+        </div>
+      </section>
+
+      <section className="space-y-2">
+        <h2 className="text-sm font-semibold uppercase text-muted-foreground">Onboarding</h2>
+        <div className="rounded-md border border-border p-3 text-sm">
+          <Link to="/onboarding" className="inline-flex items-center gap-2 text-primary underline">
+            <RefreshCcw className="h-4 w-4" /> Replay onboarding wizard
+          </Link>
+        </div>
+      </section>
+
+      <section className="space-y-2">
+        <h2 className="text-sm font-semibold uppercase text-muted-foreground">About</h2>
+        <div className="rounded-md border border-border p-3 text-sm space-y-1">
+          <div>Specdex</div>
+          <div>
+            License: MIT ·{" "}
+            <a className="underline" href="https://github.com/bsherifi/specdex">github.com/bsherifi/specdex</a>
+          </div>
+          <div className="text-xs text-muted-foreground">
+            Third-party licenses bundled at <code>THIRD-PARTY-LICENSES.txt</code> (added in plan 41).
           </div>
         </div>
       </section>

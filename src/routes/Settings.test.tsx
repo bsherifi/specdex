@@ -97,3 +97,14 @@ describe("Settings — Diagnostics card", () => {
     });
   });
 });
+
+describe("Settings — About card", () => {
+  it("shows MIT license + repo URL + Replay-onboarding link", async () => {
+    renderSettings();
+    await waitFor(() => {
+      expect(screen.getByText(/MIT/i)).toBeInTheDocument();
+      expect(screen.getByText(/github\.com\/bsherifi\/specdex/i)).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: /Replay onboarding wizard/i })).toBeInTheDocument();
+    });
+  });
+});
