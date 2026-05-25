@@ -1,0 +1,74 @@
+{
+  "format_version": 1,
+  "exported_at": "2026-05-24T00:00:00Z",
+  "kb": {
+    "id": "00000000-0000-0000-0000-000000000002",
+    "name": "Material Codes",
+    "description": "Illustrative aerospace material specification (AMS) codes.",
+    "schema": [
+      { "name": "code", "label": "Code", "type": { "kind": "text" }, "required": true, "searchable": true, "primary": true },
+      { "name": "name", "label": "Name", "type": { "kind": "text" }, "required": false, "searchable": true, "primary": false },
+      { "name": "definition", "label": "Definition", "type": { "kind": "text_multiline" }, "required": false, "searchable": true, "primary": false },
+      { "name": "family", "label": "Family", "type": { "kind": "select", "options": ["aluminum", "steel", "titanium", "nickel", "composite"] }, "required": false, "searchable": true, "primary": false }
+    ],
+    "primary_field": "code",
+    "searchable_fields": ["code", "name", "definition", "family"],
+    "highlight_color": "#34d399",
+    "created_at": "2026-05-24T00:00:00Z",
+    "updated_at": "2026-05-24T00:00:00Z",
+    "edited_by": null
+  },
+  "entries": [
+    {
+      "id": "00000000-0000-0000-0000-000000000020",
+      "kb_id": "00000000-0000-0000-0000-000000000002",
+      "primary_value": "AMS4045",
+      "data": {
+        "code": "AMS4045",
+        "name": "7075-T6 sheet",
+        "definition": "Aluminum alloy 7075, sheet and plate, solution and precipitation heat treated.",
+        "family": "aluminum"
+      },
+      "aliases": ["AMS 4045", "AMS-4045"],
+      "source": null,
+      "notes": null,
+      "created_at": "2026-05-24T00:00:00Z",
+      "updated_at": "2026-05-24T00:00:00Z",
+      "edited_by": null
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000021",
+      "kb_id": "00000000-0000-0000-0000-000000000002",
+      "primary_value": "AMS4911",
+      "data": {
+        "code": "AMS4911",
+        "name": "Ti-6Al-4V sheet",
+        "definition": "Titanium alloy 6Al-4V, sheet, strip, and plate, annealed.",
+        "family": "titanium"
+      },
+      "aliases": ["AMS 4911"],
+      "source": null,
+      "notes": null,
+      "created_at": "2026-05-24T00:00:00Z",
+      "updated_at": "2026-05-24T00:00:00Z",
+      "edited_by": null
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000022",
+      "kb_id": "00000000-0000-0000-0000-000000000002",
+      "primary_value": "AMS5643",
+      "data": {
+        "code": "AMS5643",
+        "name": "17-4PH bar",
+        "definition": "Corrosion-resistant steel bar, wire, and forging, 17Cr-4Ni, precipitation hardenable.",
+        "family": "steel"
+      },
+      "aliases": ["AMS 5643", "17-4 PH"],
+      "source": null,
+      "notes": null,
+      "created_at": "2026-05-24T00:00:00Z",
+      "updated_at": "2026-05-24T00:00:00Z",
+      "edited_by": null
+    }
+  ]
+}
