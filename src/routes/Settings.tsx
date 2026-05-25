@@ -2,10 +2,13 @@ import { useEffect, useState } from "react";
 import type { JSX } from "react";
 import { FolderOpen, RefreshCcw, Save, Upload } from "lucide-react";
 import { Link } from "react-router-dom";
+import { save, open } from "@tauri-apps/plugin-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/shared";
 import {
+  backupExport,
+  backupRestore,
   getAppSettings,
   identityGet,
   identitySet,
@@ -49,6 +52,29 @@ export default function Settings(): JSX.Element {
     await identitySet(v);
     setIdentityName(v);
     push({ title: "Identity updated", variant: "success" });
+  };
+
+  const onExport = async () => {
+    const path = await save({
+      filters: [{ name: "Specdex backup", extensions: ["zip"] }],
+      defaultPath: `specdex-backup-${new Date().toISOString().slice(0, 10)}.zip`,
+    });
+    if (!path) return;
+    await backupExport(path);
+    push({ title: "Backup written", description: path, variant: "success" });
+  };
+
+  const onRestore = async () => {
+    const path = await open({
+      filters: [{ name: "Specdex backup", extensions: ["zip"] }],
+    });
+    if (!path || Array.isArray(path)) return;
+    if (!window.confirm("Restoring will replace ALL current KBs and source documents. Continue?")) {
+      return;
+    }
+    await backupRestore(path);
+    push({ title: "Restore complete", variant: "success" });
+    void reload();
   };
 
   if (!settings) return <div>Loading…</div>;
@@ -107,21 +133,15 @@ export default function Settings(): JSX.Element {
         <h2 className="text-sm font-semibold uppercase text-muted-foreground">Backup &amp; restore</h2>
         <div className="rounded-md border border-border p-3 space-y-2">
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              onClick={() => push({ title: "Backup", description: "Implemented in plan 40", variant: "info" })}
-            >
+            <Button variant="outline" onClick={() => void onExport()}>
               <Save className="mr-2 h-4 w-4" /> Export full backup ZIP
             </Button>
-            <Button
-              variant="outline"
-              onClick={() => push({ title: "Restore", description: "Implemented in plan 40", variant: "info" })}
-            >
+            <Button variant="outline" onClick={() => void onRestore()}>
               <Upload className="mr-2 h-4 w-4" /> Restore from backup ZIP
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">
-            Restoring replaces all data. Disabled until plan 40 ships the backend.
+            Restoring replaces all data with the contents of the backup ZIP.
           </p>
         </div>
       </section>
