@@ -14,7 +14,7 @@ use tauri_specta::{collect_commands, collect_events, Builder};
 /// this module.
 pub fn builder() -> Builder<Wry> {
     use crate::commands::{
-        app, entry, identity, ingest, kb, scanner, search, settings, source_doc,
+        app, backup, entry, identity, ingest, kb, scanner, search, settings, source_doc,
     };
     Builder::<Wry>::new()
         .commands(collect_commands![
@@ -45,6 +45,10 @@ pub fn builder() -> Builder<Wry> {
             scanner::scanner_invalidate,
             search::search_entries,
             search::search_source_docs,
+            backup::backup_export,
+            backup::backup_restore,
+            backup::kb_export_json,
+            backup::kb_import_json,
         ])
         .events(collect_events![])
 }

@@ -121,3 +121,17 @@ export const getAppSettings = pick("getAppSettings") as () => Promise<{
 export const revealInFileManager = pick("revealInFileManager") as (
   path: string,
 ) => Promise<unknown>;
+
+/* --- Backup + restore --- */
+export const backupExport = pick("backupExport") as (
+  outPath: string,
+) => Promise<unknown>;
+export const backupRestore = pick("backupRestore") as (
+  zipPath: string,
+) => Promise<unknown>;
+export const kbExportJson = pick("kbExportJson") as (
+  kbId: string,
+) => Promise<unknown>;
+export const kbImportJson = pick("kbImportJson") as (
+  json: string,
+) => Promise<unknown>;

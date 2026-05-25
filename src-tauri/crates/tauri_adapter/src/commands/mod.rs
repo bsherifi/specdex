@@ -18,6 +18,7 @@
 )]
 
 pub mod app;
+pub mod backup;
 pub mod entry;
 pub mod identity;
 pub mod ingest;

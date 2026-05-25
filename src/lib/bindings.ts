@@ -217,6 +217,38 @@ async searchSourceDocs(q: string, limit: number) : Promise<Result<SourceDocHit[]
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
+},
+async backupExport(outPath: string) : Promise<Result<BackupManifest, CoreError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("backup_export", { outPath }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async backupRestore(zipPath: string) : Promise<Result<BackupManifest, CoreError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("backup_restore", { zipPath }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async kbExportJson(kbId: KbId) : Promise<Result<KbExport, CoreError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("kb_export_json", { kbId }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async kbImportJson(json: string) : Promise<Result<Kb, CoreError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("kb_import_json", { json }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
 }
 }
 
@@ -238,6 +270,7 @@ export type AppVersion = { app: string; git_short_sha: string | null }
  * pdfium's native float width.
  */
 export type BBox = { x: number; y: number; w: number; h: number }
+export type BackupManifest = { format_version: number; app_version: string; created_at: string; identity_display_name: string | null; kb_count: number; doc_count: number; total_entries: number }
 export type CoreError = { kind: "not_found"; data: string } | { kind: "conflict"; data: string } | { kind: "validation"; data: string } | { kind: "schema_validation"; data: SchemaValidationError } | { kind: "identity_validation"; data: IdentityValidationError } | { kind: "parse"; data: string } | { kind: "io"; data: string } | { kind: "db"; data: string } | { kind: "search"; data: string } | { kind: "internal"; data: string }
 export type CreateEntryArgs = { kb_id: KbId; data: Partial<{ [key in string]: JsonValue }>; aliases: string[]; source: SourceRef | null; notes: string | null }
 export type CreateEntryResult = { entry: Entry; warning: SoftDuplicateWarning | null }
@@ -286,6 +319,7 @@ export type Kb = { id: KbId; name: string; description: string | null; schema: S
  * the 8-color palette declared in `tailwind.config.ts`.
  */
 highlight_color: string; created_at: string; updated_at: string; edited_by: string | null }
+export type KbExport = { format_version: number; exported_at: string; kb: Kb; entries: Entry[] }
 export type KbId = string
 /**
  * Lightweight version for list views — avoids shipping the full schema JSON
