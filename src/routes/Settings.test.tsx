@@ -11,9 +11,15 @@ vi.mock("@/lib/tauri", () => ({
     ocrs_version: "bundled",
     tantivy_version: "0.22",
   })),
-  identityGet: vi.fn(async () => null),
-  identitySet: vi.fn(async () => ({})),
-  revealInFileManager: vi.fn(async () => {}),
+  identityGet: vi.fn(async () => ({ status: "ok", data: null })),
+  identitySet: vi.fn(async () => ({ status: "ok", data: { display_name: "Sara" } })),
+  revealInFileManager: vi.fn(async () => ({ status: "ok", data: null })),
+  backupExport: vi.fn(async () => ({ status: "ok", data: {} })),
+  backupRestore: vi.fn(async () => ({ status: "ok", data: {} })),
+  unwrap: <T,>(res: { status: "ok"; data: T } | { status: "error"; error: unknown }) => {
+    if (res.status === "error") throw new Error(String(res.error));
+    return res.data;
+  },
 }));
 
 import Settings from "./Settings";

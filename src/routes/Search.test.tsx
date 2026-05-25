@@ -17,6 +17,10 @@ vi.mock("@/lib/tauri", () => ({
       { id: "kb1", name: "Boeing", highlight_color: "#f59e0b", entry_count: 1, updated_at: "2026-05-24T00:00:00Z" },
     ],
   })),
+  unwrap: <T,>(res: { status: "ok"; data: T } | { status: "error"; error: unknown }) => {
+    if (res.status === "error") throw new Error(String(res.error));
+    return res.data;
+  },
 }));
 
 import Search from "./Search";

@@ -13,6 +13,7 @@ import {
   identityGet,
   identitySet,
   revealInFileManager,
+  unwrap,
 } from "@/lib/tauri";
 
 interface AppSettings {
@@ -21,14 +22,6 @@ interface AppSettings {
   pdfium_version: string;
   ocrs_version: string;
   tantivy_version: string;
-}
-
-// Commands return the tauri-specta `{ status, data | error }` wrapper (see the
-// contract note in `@/lib/tauri`); narrow on `status` rather than casting past it.
-function unwrap<T>(res: unknown): T {
-  const r = res as { status: "ok"; data: T } | { status: "error"; error: unknown };
-  if (r.status === "error") throw new Error(JSON.stringify(r.error));
-  return r.data;
 }
 
 export default function Settings(): JSX.Element {
@@ -57,9 +50,13 @@ export default function Settings(): JSX.Element {
       push({ title: "Display name cannot be empty", variant: "error" });
       return;
     }
-    await identitySet(v);
-    setIdentityName(v);
-    push({ title: "Identity updated", variant: "success" });
+    try {
+      unwrap(await identitySet(v));
+      setIdentityName(v);
+      push({ title: "Identity updated", variant: "success" });
+    } catch (e) {
+      push({ title: "Identity update failed", description: String(e), variant: "error" });
+    }
   };
 
   const onExport = async () => {
@@ -68,8 +65,12 @@ export default function Settings(): JSX.Element {
       defaultPath: `specdex-backup-${new Date().toISOString().slice(0, 10)}.zip`,
     });
     if (!path) return;
-    await backupExport(path);
-    push({ title: "Backup written", description: path, variant: "success" });
+    try {
+      unwrap(await backupExport(path));
+      push({ title: "Backup written", description: path, variant: "success" });
+    } catch (e) {
+      push({ title: "Backup failed", description: String(e), variant: "error" });
+    }
   };
 
   const onRestore = async () => {
@@ -80,9 +81,22 @@ export default function Settings(): JSX.Element {
     if (!window.confirm("Restoring will replace ALL current KBs and source documents. Continue?")) {
       return;
     }
-    await backupRestore(path);
-    push({ title: "Restore complete", variant: "success" });
-    void reload();
+    try {
+      unwrap(await backupRestore(path));
+      push({ title: "Restore complete", variant: "success" });
+      void reload();
+    } catch (e) {
+      push({ title: "Restore failed", description: String(e), variant: "error" });
+    }
+  };
+
+  const openDataDir = async () => {
+    if (!settings) return;
+    try {
+      unwrap(await revealInFileManager(settings.data_dir));
+    } catch (e) {
+      push({ title: "Couldn't open folder", description: String(e), variant: "error" });
+    }
   };
 
   if (!settings) return <div>Loading…</div>;
@@ -101,7 +115,7 @@ export default function Settings(): JSX.Element {
             variant="outline"
             size="sm"
             className="mt-2"
-            onClick={() => void revealInFileManager(settings.data_dir)}
+            onClick={() => void openDataDir()}
           >
             <FolderOpen className="mr-2 h-4 w-4" /> Open in file manager
           </Button>

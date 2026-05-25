@@ -6,6 +6,20 @@ type GeneratedCommands = typeof bindings & {
 
 const gen = bindings as GeneratedCommands;
 
+type CommandResult<T> =
+  | { status: "ok"; data: T }
+  | { status: "error"; error: unknown };
+
+function formatCommandError(error: unknown): string {
+  if (typeof error === "string") return error;
+  if (error instanceof Error) return error.message;
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return String(error);
+  }
+}
+
 function pick<TName extends string>(
   name: TName,
 ): (...args: unknown[]) => Promise<unknown> {
@@ -21,6 +35,15 @@ function pick<TName extends string>(
   return fn as (...args: unknown[]) => Promise<unknown>;
 }
 
+export function unwrap<T>(res: unknown): T {
+  const r = res as Partial<CommandResult<T>>;
+  if (r?.status === "ok") return r.data as T;
+  if (r?.status === "error") {
+    throw new Error(formatCommandError(r.error) || "Command failed");
+  }
+  throw new Error("Command returned an invalid Result wrapper");
+}
+
 // One typed re-export per command. Plan 20 expands this list as the surface
 // grows. Field names mirror the generated bindings (serde wire format).
 export const getAppVersion = pick("getAppVersion") as () => Promise<{
@@ -29,10 +52,10 @@ export const getAppVersion = pick("getAppVersion") as () => Promise<{
 }>;
 
 // Commands that return `Result<T, CoreError>` resolve to the tauri-specta
-// `{ status, data | error }` wrapper. Callers narrow on `status` and cast
-// `data` to the matching generated type from `@/lib/bindings`. Returns are
-// intentionally loose here so this surface stays stable across tauri-specta
-// versions; field names mirror the serde wire format (snake_case).
+// `{ status, data | error }` wrapper. Callers use `unwrap<T>()` above to
+// surface backend errors instead of accidentally treating the wrapper as data.
+// Returns are intentionally loose here so this surface stays stable across
+// tauri-specta versions; field names mirror the serde wire format (snake_case).
 
 /* --- KB --- */
 export const kbCreate = pick("kbCreate") as (args: unknown) => Promise<unknown>;

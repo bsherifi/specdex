@@ -4,8 +4,16 @@ import { Plus, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FieldEditor } from "@/components/SchemaEditor/FieldEditor";
 import { MigrationDiff } from "@/components/SchemaEditor/MigrationDiff";
-import { diff, isEmpty, type FieldDef, type Schema } from "@/lib/schema-diff";
-import { kbGet, kbMigrateSchema } from "@/lib/tauri";
+import {
+  diff,
+  isEmpty,
+  normalizeSchema,
+  schemaToWire,
+  type FieldDef,
+  type Schema,
+  type WireSchema,
+} from "@/lib/schema-diff";
+import { kbGet, kbMigrateSchema, unwrap } from "@/lib/tauri";
 import { useToast } from "@/components/shared";
 
 const NEW_FIELD = (i: number): FieldDef => ({
@@ -16,14 +24,6 @@ const NEW_FIELD = (i: number): FieldDef => ({
   searchable: null,
   primary: false,
 });
-
-// Commands return the tauri-specta `{ status, data | error }` wrapper (see the
-// contract note in `@/lib/tauri`); narrow on `status` rather than casting past it.
-function unwrap<T>(res: unknown): T {
-  const r = res as { status: "ok"; data: T } | { status: "error"; error: unknown };
-  if (r.status === "error") throw new Error(JSON.stringify(r.error));
-  return r.data;
-}
 
 export default function SchemaEditor(): JSX.Element {
   const { id } = useParams<{ id: string }>();
@@ -38,9 +38,10 @@ export default function SchemaEditor(): JSX.Element {
   useEffect(() => {
     if (!id) return;
     void kbGet(id).then((res) => {
-      const k = unwrap<{ schema: Schema; name: string }>(res);
-      setOriginal(structuredClone(k.schema));
-      setDraft(structuredClone(k.schema));
+      const k = unwrap<{ schema: WireSchema; name: string }>(res);
+      const schema = normalizeSchema(k.schema);
+      setOriginal(structuredClone(schema));
+      setDraft(structuredClone(schema));
       setKbName(k.name);
     });
   }, [id]);
@@ -79,7 +80,7 @@ export default function SchemaEditor(): JSX.Element {
 
   const apply = async () => {
     try {
-      unwrap(await kbMigrateSchema(id, draft));
+      unwrap(await kbMigrateSchema(id, schemaToWire(draft)));
       push({ title: "Schema updated", variant: "success" });
       navigate(`/kbs/${id}`);
     } catch (e) {

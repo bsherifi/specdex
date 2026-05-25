@@ -21,38 +21,27 @@ import {
   kbDelete,
   entryList,
   entryBulkDelete,
+  unwrap,
 } from "@/lib/tauri";
 import { useStore } from "@/lib/store";
 import { KB_COLOR_HEX, type KbColorName } from "@/lib/theme";
+import { normalizeSchema, type FieldDef, type Schema, type WireSchema } from "@/lib/schema-diff";
 
-interface FieldDef {
-  name: string;
-  label: string;
-  type: { kind: string };
-  primary: boolean;
-}
 interface Kb {
   id: string;
   name: string;
   description: string | null;
-  schema: { fields: FieldDef[] };
+  schema: Schema;
   primary_field: string;
   highlight_color: string;
 }
+type WireKb = Omit<Kb, "schema"> & { schema: WireSchema };
 interface Entry {
   id: string;
   kb_id: string;
   primary_value: string;
   data: Record<string, unknown>;
   updated_at: string;
-}
-
-// Commands return the tauri-specta `{ status, data | error }` wrapper (see the
-// contract note in `@/lib/tauri`); narrow on `status` rather than casting past it.
-function unwrap<T>(res: unknown): T {
-  const r = res as { status: "ok"; data: T } | { status: "error"; error: unknown };
-  if (r.status === "error") throw new Error(JSON.stringify(r.error));
-  return r.data;
 }
 
 export default function KbDetail(): JSX.Element {
@@ -70,12 +59,13 @@ export default function KbDetail(): JSX.Element {
   const [confirmKbDelete, setConfirmKbDelete] = useState(false);
   const { push } = useToast();
   const staleByKb = useStore((s) => s.entryStaleByKb);
+  const staleForKb = id ? staleByKb[id] ?? 0 : 0;
 
   useEffect(() => {
     if (!id) return;
     void kbGet(id).then((res) => {
-      const k = unwrap<Kb>(res);
-      setKb(k);
+      const k = unwrap<WireKb>(res);
+      setKb({ ...k, schema: normalizeSchema(k.schema) });
       setNameDraft(k.name);
     });
   }, [id]);
@@ -85,7 +75,7 @@ export default function KbDetail(): JSX.Element {
     void entryList({ kb_id: id, filter: filter || undefined, limit: 5000 }).then((res) =>
       setEntries(unwrap<Entry[]>(res)),
     );
-  }, [id, filter, staleByKb[id ?? ""]]);
+  }, [id, filter, staleForKb]);
 
   if (!kb || !id) return <div>Loading…</div>;
 
@@ -95,10 +85,17 @@ export default function KbDetail(): JSX.Element {
   ];
 
   const setColor = async (name: KbColorName) => {
-    await kbUpdateMeta(kb.id, { highlight_color: KB_COLOR_HEX[name] });
-    push({ title: "Color updated", variant: "success" });
-    setColorOpen(false);
-    void kbGet(kb.id).then((res) => setKb(unwrap<Kb>(res)));
+    try {
+      unwrap(await kbUpdateMeta(kb.id, { highlight_color: KB_COLOR_HEX[name] }));
+      push({ title: "Color updated", variant: "success" });
+      setColorOpen(false);
+      void kbGet(kb.id).then((res) => {
+        const k = unwrap<WireKb>(res);
+        setKb({ ...k, schema: normalizeSchema(k.schema) });
+      });
+    } catch (e) {
+      push({ title: "Color update failed", description: String(e), variant: "error" });
+    }
   };
 
   const saveName = async () => {
@@ -106,10 +103,17 @@ export default function KbDetail(): JSX.Element {
       setEditName(false);
       return;
     }
-    await kbUpdateMeta(kb.id, { name: nameDraft.trim() });
-    push({ title: "Renamed", variant: "success" });
-    setEditName(false);
-    void kbGet(kb.id).then((res) => setKb(unwrap<Kb>(res)));
+    try {
+      unwrap(await kbUpdateMeta(kb.id, { name: nameDraft.trim() }));
+      push({ title: "Renamed", variant: "success" });
+      setEditName(false);
+      void kbGet(kb.id).then((res) => {
+        const k = unwrap<WireKb>(res);
+        setKb({ ...k, schema: normalizeSchema(k.schema) });
+      });
+    } catch (e) {
+      push({ title: "Rename failed", description: String(e), variant: "error" });
+    }
   };
 
   return (
@@ -268,9 +272,13 @@ export default function KbDetail(): JSX.Element {
         confirmLabel="Delete"
         destructive
         onConfirm={async () => {
-          await entryBulkDelete(Array.from(selection));
-          setSelection(new Set());
-          setConfirmDelete(false);
+          try {
+            unwrap(await entryBulkDelete(Array.from(selection)));
+            setSelection(new Set());
+            setConfirmDelete(false);
+          } catch (e) {
+            push({ title: "Delete failed", description: String(e), variant: "error" });
+          }
         }}
         onCancel={() => setConfirmDelete(false)}
       />
@@ -281,8 +289,12 @@ export default function KbDetail(): JSX.Element {
         confirmLabel="Delete"
         destructive
         onConfirm={async () => {
-          await kbDelete(kb.id);
-          navigate("/kbs");
+          try {
+            unwrap(await kbDelete(kb.id));
+            navigate("/kbs");
+          } catch (e) {
+            push({ title: "Delete failed", description: String(e), variant: "error" });
+          }
         }}
         onCancel={() => setConfirmKbDelete(false)}
       />

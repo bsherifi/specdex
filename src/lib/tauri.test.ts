@@ -20,12 +20,26 @@ vi.mock("./bindings", async () => {
   };
 });
 
-import { getAppVersion } from "./tauri";
+import { getAppVersion, unwrap } from "./tauri";
 
 describe("tauri wrapper", () => {
   it("re-exports getAppVersion that resolves to the generated shape", async () => {
     const v = await getAppVersion();
     expect(v.app).toBe("0.1.0");
     expect(v.git_short_sha).toBeNull();
+  });
+
+  it("unwraps ok command results", () => {
+    expect(unwrap<{ id: string }>({ status: "ok", data: { id: "kb1" } })).toEqual({ id: "kb1" });
+  });
+
+  it("throws on error command results", () => {
+    expect(() => unwrap({ status: "error", error: { kind: "validation", message: "bad" } })).toThrow(
+      /validation/,
+    );
+  });
+
+  it("rejects non-Result values", () => {
+    expect(() => unwrap(["not", "a", "wrapper"])).toThrow(/invalid Result wrapper/);
   });
 });

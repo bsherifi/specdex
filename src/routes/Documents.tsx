@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { JSX } from "react";
 import { useNavigate } from "react-router-dom";
-import { Trash2 } from "lucide-react";
+import { Trash2, Upload } from "lucide-react";
+import { open } from "@tauri-apps/plugin-dialog";
 import {
   Table,
   TableBody,
@@ -15,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState, ConfirmModal, useToast } from "@/components/shared";
 import { FileDropZone } from "@/components/FileDropZone";
 import { useStore } from "@/lib/store";
-import { sourceDocListRecent, sourceDocDelete } from "@/lib/tauri";
+import { sourceDocListRecent, sourceDocDelete, unwrap } from "@/lib/tauri";
 
 interface DocRow {
   id: string;
@@ -27,14 +28,6 @@ interface DocRow {
 
 type SortKey = "filename" | "page_count" | "ingested_at";
 
-// Commands return the tauri-specta `{ status, data | error }` wrapper (see the
-// contract note in `@/lib/tauri`); narrow on `status` rather than casting past it.
-function unwrap<T>(res: unknown): T {
-  const r = res as { status: "ok"; data: T } | { status: "error"; error: unknown };
-  if (r.status === "error") throw new Error(JSON.stringify(r.error));
-  return r.data;
-}
-
 export default function Documents(): JSX.Element {
   const [docs, setDocs] = useState<DocRow[]>([]);
   const [filter, setFilter] = useState("");
@@ -45,14 +38,19 @@ export default function Documents(): JSX.Element {
   const { push } = useToast();
   const navigate = useNavigate();
   const setPending = useStore((s) => s.setPendingIngest);
+  const completedIngestCount = useStore((s) => s.ingestJobs.filter((j) => j.state === "done").length);
 
-  const reload = async () => {
+  const reload = useCallback(async () => {
     setDocs(unwrap<DocRow[]>(await sourceDocListRecent(500)));
-  };
+  }, []);
 
   useEffect(() => {
     void reload();
-  }, []);
+  }, [reload]);
+
+  useEffect(() => {
+    if (completedIngestCount > 0) void reload();
+  }, [completedIngestCount, reload]);
 
   const filtered = useMemo(() => {
     const f = filter.trim().toLowerCase();
@@ -77,10 +75,23 @@ export default function Documents(): JSX.Element {
       return next;
     });
 
-  const handleDrop = (paths: string[]) => {
+  const handleDrop = useCallback((paths: string[]) => {
     if (paths.length === 0) return;
     const limited = paths.slice(0, 50); // §25 default cap
     setPending(limited.map((p) => ({ path: p, filename: p.split(/[/\\]/).pop() ?? p })));
+  }, [setPending]);
+
+  const browse = async () => {
+    try {
+      const picked = await open({
+        multiple: true,
+        filters: [{ name: "PDF documents", extensions: ["pdf"] }],
+      });
+      if (!picked) return;
+      handleDrop(Array.isArray(picked) ? picked : [picked]);
+    } catch (e) {
+      push({ title: "File picker failed", description: String(e), variant: "error" });
+    }
   };
 
   const bulkDelete = async () => {
@@ -107,21 +118,28 @@ export default function Documents(): JSX.Element {
           onChange={(e) => setFilter(e.target.value)}
           className="max-w-sm"
         />
-        {selection.size > 0 && (
-          <Button
-            variant="destructive"
-            onClick={() => setConfirm({ open: true, ids: Array.from(selection) })}
-          >
-            <Trash2 className="mr-2 h-4 w-4" />
-            Delete ({selection.size})
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => void browse()}>
+            <Upload className="mr-2 h-4 w-4" />
+            Browse PDFs
           </Button>
-        )}
+          {selection.size > 0 && (
+            <Button
+              variant="destructive"
+              onClick={() => setConfirm({ open: true, ids: Array.from(selection) })}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete ({selection.size})
+            </Button>
+          )}
+        </div>
       </div>
 
       {filtered.length === 0 ? (
         <EmptyState
-          title={docs.length === 0 ? "Drop PDFs here, or click to browse." : "No documents match this filter."}
+          title={docs.length === 0 ? "Drop PDFs here, or browse." : "No documents match this filter."}
           {...(docs.length === 0 ? { description: "Up to 50 files per batch." } : {})}
+          action={docs.length === 0 ? <Button onClick={() => void browse()}>Browse PDFs</Button> : undefined}
           className="mt-6"
         />
       ) : (

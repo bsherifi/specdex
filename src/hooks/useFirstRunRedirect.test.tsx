@@ -13,6 +13,10 @@ vi.mock("react-router-dom", async () => {
 vi.mock("@/lib/tauri", () => ({
   identityGet: vi.fn(async () => ({ status: "ok", data: null })),
   kbListSummaries: vi.fn(async () => ({ status: "ok", data: [] })),
+  unwrap: <T,>(res: { status: "ok"; data: T } | { status: "error"; error: unknown }) => {
+    if (res.status === "error") throw new Error(String(res.error));
+    return res.data;
+  },
 }));
 
 import { useFirstRunRedirect } from "./useFirstRunRedirect";

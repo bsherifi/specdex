@@ -6,7 +6,7 @@ import { ScopeDropdown } from "./ScopeDropdown";
 import { ExtractPopover } from "./ExtractPopover";
 import { usePdf } from "./usePdf";
 import type { KbColorMap, KbScope, Match, SelectionCapture } from "./types";
-import { scanDocument, sourceDocResolvePath, kbListSummaries } from "@/lib/tauri";
+import { scanDocument, sourceDocResolvePath, kbListSummaries, unwrap } from "@/lib/tauri";
 import { useStore } from "@/lib/store";
 import type { KbColorName } from "@/lib/theme";
 
@@ -16,14 +16,6 @@ interface Props {
 }
 
 type Kb = { id: string; name: string; highlight_color: string };
-
-// Commands return the tauri-specta `{ status, data | error }` wrapper (see the
-// contract note in `@/lib/tauri`); narrow on `status` rather than casting past it.
-function unwrap<T>(res: unknown): T {
-  const r = res as { status: "ok"; data: T } | { status: "error"; error: unknown };
-  if (r.status === "error") throw new Error(JSON.stringify(r.error));
-  return r.data;
-}
 
 function hexToColorName(hex: string): KbColorName | undefined {
   const map: Record<string, KbColorName> = {

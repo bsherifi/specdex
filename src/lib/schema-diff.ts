@@ -21,6 +21,17 @@ export interface Schema {
   fields: FieldDef[];
 }
 
+export type WireSchema = FieldDef[];
+export type SchemaLike = Schema | WireSchema;
+
+export function normalizeSchema(schema: SchemaLike): Schema {
+  return Array.isArray(schema) ? { fields: schema } : schema;
+}
+
+export function schemaToWire(schema: SchemaLike): WireSchema {
+  return Array.isArray(schema) ? schema : schema.fields;
+}
+
 export interface SchemaDiff {
   added: FieldDef[];
   removed: FieldDef[];

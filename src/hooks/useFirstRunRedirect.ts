@@ -1,14 +1,6 @@
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { identityGet, kbListSummaries } from "@/lib/tauri";
-
-// Commands return the tauri-specta `{ status, data | error }` wrapper (see the
-// contract note in `@/lib/tauri`); narrow on `status` rather than casting past it.
-function unwrap<T>(res: unknown): T {
-  const r = res as { status: "ok"; data: T } | { status: "error"; error: unknown };
-  if (r.status === "error") throw new Error(JSON.stringify(r.error));
-  return r.data;
-}
+import { identityGet, kbListSummaries, unwrap } from "@/lib/tauri";
 
 export function useFirstRunRedirect(): void {
   const navigate = useNavigate();

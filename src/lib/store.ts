@@ -61,7 +61,11 @@ export const useStore = create<SpecdexStore>()(
         const idx = p.ingestJobs.findIndex((j) => j.jobId === row.jobId);
         if (idx === -1) return { ingestJobs: [...p.ingestJobs, row] };
         const next = [...p.ingestJobs];
-        next[idx] = { ...next[idx], ...row };
+        next[idx] = {
+          ...next[idx],
+          ...row,
+          filename: row.filename || next[idx]!.filename,
+        };
         return { ingestJobs: next };
       }),
     clearDoneIngestJobs: () =>

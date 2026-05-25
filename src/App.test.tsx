@@ -15,6 +15,10 @@ vi.mock("@/lib/tauri", () => ({
   kbListSummaries: vi.fn(async () => ({ status: "ok", data: [] })),
   searchEntries: vi.fn(async () => ({ status: "ok", data: [] })),
   searchSourceDocs: vi.fn(async () => ({ status: "ok", data: [] })),
+  unwrap: <T,>(res: { status: "ok"; data: T } | { status: "error"; error: unknown }) => {
+    if (res.status === "error") throw new Error(String(res.error));
+    return res.data;
+  },
 }));
 
 describe("App", () => {

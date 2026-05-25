@@ -4,8 +4,12 @@ import { describe, expect, it, vi } from "vitest";
 import { ToastHost } from "@/components/shared";
 
 vi.mock("@/lib/tauri", () => ({
-  identitySet: vi.fn(async () => ({})),
-  kbCreate: vi.fn(async () => ({})),
+  identitySet: vi.fn(async () => ({ status: "ok", data: {} })),
+  kbCreate: vi.fn(async () => ({ status: "ok", data: {} })),
+  unwrap: <T,>(res: { status: "ok"; data: T } | { status: "error"; error: unknown }) => {
+    if (res.status === "error") throw new Error(String(res.error));
+    return res.data;
+  },
 }));
 
 import Onboarding from "./Onboarding";
@@ -52,7 +56,9 @@ describe("Onboarding — KB-create step", () => {
     fireEvent.click(screen.getByRole("button", { name: /Create/ }));
     await waitFor(() => {
       expect(identitySet).toHaveBeenCalledWith("Sara");
-      expect(kbCreate).toHaveBeenCalled();
+      expect(kbCreate).toHaveBeenCalledWith(expect.objectContaining({
+        schema: expect.any(Array),
+      }));
     });
   });
 });

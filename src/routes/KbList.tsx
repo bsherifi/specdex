@@ -4,7 +4,7 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared";
 import { KbCreateDialog } from "@/components/KbCreateDialog";
-import { kbListSummaries } from "@/lib/tauri";
+import { kbListSummaries, unwrap } from "@/lib/tauri";
 import { useStore } from "@/lib/store";
 
 interface KbSummary {
@@ -14,14 +14,6 @@ interface KbSummary {
   highlight_color: string;
   entry_count: number;
   updated_at: string;
-}
-
-// Commands return the tauri-specta `{ status, data | error }` wrapper (see the
-// contract note in `@/lib/tauri`); narrow on `status` rather than casting past it.
-function unwrap<T>(res: unknown): T {
-  const r = res as { status: "ok"; data: T } | { status: "error"; error: unknown };
-  if (r.status === "error") throw new Error(JSON.stringify(r.error));
-  return r.data;
 }
 
 export default function KbList(): JSX.Element {

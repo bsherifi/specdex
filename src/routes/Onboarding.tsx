@@ -7,7 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/shared";
 import { KbColorPicker } from "@/components/KbColorPicker";
 import { TEMPLATES, EMPTY_TEMPLATE, type KbTemplate } from "@/dev/templates";
-import { identitySet, kbCreate } from "@/lib/tauri";
+import { identitySet, kbCreate, unwrap } from "@/lib/tauri";
+import { schemaToWire } from "@/lib/schema-diff";
 import { KB_COLOR_HEX, type KbColorName } from "@/lib/theme";
 
 type Step = 0 | 1 | 2 | 3;
@@ -30,13 +31,13 @@ export default function Onboarding(): JSX.Element {
 
   const finish = async () => {
     try {
-      await identitySet(name.trim());
-      await kbCreate({
+      unwrap(await identitySet(name.trim()));
+      unwrap(await kbCreate({
         name: kbName,
         description: kbDesc || null,
-        schema: chosenTpl.schema,
+        schema: schemaToWire(chosenTpl.schema),
         highlight_color: KB_COLOR_HEX[color],
-      });
+      }));
       setStep(3);
     } catch (e) {
       push({ title: "Onboarding failed", description: String(e), variant: "error" });

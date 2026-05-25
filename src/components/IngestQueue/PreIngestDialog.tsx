@@ -3,21 +3,13 @@ import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/lib/store";
-import { ingestFiles } from "@/lib/tauri";
+import { ingestFiles, unwrap } from "@/lib/tauri";
 import { useToast } from "@/components/shared";
 
 interface FileRow {
   path: string;
   filename: string;
   ocr: boolean;
-}
-
-// Commands return the tauri-specta `{ status, data | error }` wrapper; narrow on
-// `status` so an error result surfaces instead of being reported as success.
-function unwrap<T>(res: unknown): T {
-  const r = res as { status: "ok"; data: T } | { status: "error"; error: unknown };
-  if (r.status === "error") throw new Error(JSON.stringify(r.error));
-  return r.data;
 }
 
 export function PreIngestDialog(): JSX.Element {

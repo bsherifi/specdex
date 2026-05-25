@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { EmptyState, KbBadge } from "@/components/shared";
 import { useDebounce } from "@/hooks/useDebounce";
-import { searchEntries, searchSourceDocs, kbListSummaries } from "@/lib/tauri";
+import { searchEntries, searchSourceDocs, kbListSummaries, unwrap } from "@/lib/tauri";
 import { cn } from "@/lib/utils";
 import type { KbColorName } from "@/lib/theme";
 
@@ -32,14 +32,6 @@ interface KbSummary {
 }
 
 const LIMIT = 50;
-
-// Commands return the tauri-specta `{ status, data | error }` wrapper (see the
-// contract note in `@/lib/tauri`); narrow on `status` rather than casting past it.
-function unwrap<T>(res: unknown): T {
-  const r = res as { status: "ok"; data: T } | { status: "error"; error: unknown };
-  if (r.status === "error") throw new Error(JSON.stringify(r.error));
-  return r.data;
-}
 
 function colorForHex(hex: string): KbColorName | undefined {
   // Map common palette hexes back to KB color names; if unknown, return undefined

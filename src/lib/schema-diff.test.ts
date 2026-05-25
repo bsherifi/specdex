@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { diff } from "./schema-diff";
+import { diff, normalizeSchema, schemaToWire } from "./schema-diff";
 
 describe("schema-diff", () => {
   it("detects rename via _renamed_from", () => {
@@ -30,5 +30,16 @@ describe("schema-diff", () => {
     const d = diff(oldS, newS);
     expect(d.type_changed.length).toBe(1);
     expect(d.added.map((x) => x.name)).toEqual(["new_one"]);
+  });
+
+  it("adapts wire schema arrays at the UI boundary", () => {
+    const wire = [
+      { name: "code", label: "Code", type: { kind: "text" as const }, required: true, searchable: true, primary: true },
+    ];
+
+    const schema = normalizeSchema(wire);
+
+    expect(schema.fields).toBe(wire);
+    expect(schemaToWire(schema)).toBe(wire);
   });
 });

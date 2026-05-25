@@ -11,8 +11,8 @@ import { ImageAttachmentField } from "./fields/ImageAttachmentField";
 import { AliasList } from "./AliasList";
 import { SourceBackrefPanel } from "./SourceBackrefPanel";
 import { initialValue, validate, type EntryFormValue } from "@/lib/schema-form";
-import type { Schema, FieldDef } from "@/lib/schema-diff";
-import { kbGet, entryCreate, entryGet, entryUpdate } from "@/lib/tauri";
+import { normalizeSchema, type Schema, type FieldDef, type WireSchema } from "@/lib/schema-diff";
+import { kbGet, entryCreate, entryGet, entryUpdate, unwrap } from "@/lib/tauri";
 
 interface SourceRef {
   source_doc_id: string;
@@ -29,14 +29,6 @@ interface Props {
   onCancel: () => void;
 }
 
-// Commands return the tauri-specta `{ status, data | error }` wrapper (see the
-// contract note in `@/lib/tauri`); narrow on `status` rather than casting past it.
-function unwrap<T>(res: unknown): T {
-  const r = res as { status: "ok"; data: T } | { status: "error"; error: unknown };
-  if (r.status === "error") throw new Error(JSON.stringify(r.error));
-  return r.data;
-}
-
 export function EntryForm({ kbId, entryId, initialCapture, onSaved, onCancel }: Props): JSX.Element {
   const [schema, setSchema] = useState<Schema | null>(null);
   const [value, setValue] = useState<EntryFormValue | null>(null);
@@ -47,12 +39,13 @@ export function EntryForm({ kbId, entryId, initialCapture, onSaved, onCancel }: 
 
   useEffect(() => {
     void kbGet(kbId).then((res) => {
-      const k = unwrap<{ schema: Schema }>(res);
-      setSchema(k.schema);
+      const k = unwrap<{ schema: WireSchema }>(res);
+      const schema = normalizeSchema(k.schema);
+      setSchema(schema);
       if (!entryId) {
-        const init = initialValue(k.schema);
+        const init = initialValue(schema);
         if (initialCapture) {
-          const primary = k.schema.fields.find((f) => f.primary);
+          const primary = schema.fields.find((f) => f.primary);
           if (primary) init[primary.name] = initialCapture.text.trim();
         }
         setValue(init);

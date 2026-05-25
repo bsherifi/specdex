@@ -25,6 +25,12 @@ describe("ingestJobs", () => {
     expect(rows[0]?.state).toBe("running");
   });
 
+  it("preserves filename when progress events omit it", () => {
+    useStore.getState().upsertIngestJob({ jobId: "a", filename: "x.pdf", progress: 0, state: "queued" });
+    useStore.getState().upsertIngestJob({ jobId: "a", filename: "", progress: 1, state: "done" });
+    expect(useStore.getState().ingestJobs[0]?.filename).toBe("x.pdf");
+  });
+
   it("clearDoneIngestJobs removes done rows", () => {
     useStore.getState().upsertIngestJob({ jobId: "a", filename: "x.pdf", progress: 1, state: "done" });
     useStore.getState().upsertIngestJob({ jobId: "b", filename: "y.pdf", progress: 0.5, state: "running" });

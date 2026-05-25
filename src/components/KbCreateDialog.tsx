@@ -2,6 +2,7 @@ import { useState, type JSX } from "react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -11,8 +12,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { KbColorPicker } from "./KbColorPicker";
 import { KB_COLOR_HEX, defaultKbColor, type KbColorName } from "@/lib/theme";
-import { kbCreate } from "@/lib/tauri";
+import { kbCreate, unwrap } from "@/lib/tauri";
 import { useToast } from "@/components/shared";
+import type { FieldDef } from "@/lib/schema-diff";
 
 interface Props {
   open: boolean;
@@ -21,7 +23,7 @@ interface Props {
   onCreated: () => void;
 }
 
-const STARTER_SCHEMA = [
+const STARTER_SCHEMA: FieldDef[] = [
   {
     name: "code",
     label: "Code",
@@ -48,12 +50,12 @@ export function KbCreateDialog({ open, existingCount, onClose, onCreated }: Prop
 
   const submit = async () => {
     try {
-      await kbCreate({
+      unwrap(await kbCreate({
         name,
-        description: description || undefined,
-        schema: { fields: STARTER_SCHEMA },
+        description: description || null,
+        schema: STARTER_SCHEMA,
         highlight_color: KB_COLOR_HEX[color],
-      });
+      }));
       push({ title: "KB created", variant: "success" });
       setName("");
       setDescription("");
@@ -69,6 +71,9 @@ export function KbCreateDialog({ open, existingCount, onClose, onCreated }: Prop
       <DialogContent>
         <DialogHeader>
           <DialogTitle>New knowledge base</DialogTitle>
+          <DialogDescription className="sr-only">
+            Create a local knowledge base with a starter schema.
+          </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-3">
           <Input placeholder="Name (e.g. Boeing Specs)" value={name} onChange={(e) => setName(e.target.value)} />
