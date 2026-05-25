@@ -24,6 +24,12 @@ export default defineConfig({
     },
   },
   envPrefix: ["VITE_", "TAURI_ENV_*"],
+  optimizeDeps: {
+    include: ["pdfjs-dist/legacy/build/pdf.mjs"],
+  },
+  worker: {
+    format: "es",
+  },
   build: {
     target: "es2022",
     minify: !process.env["TAURI_DEBUG"] ? "esbuild" : false,
