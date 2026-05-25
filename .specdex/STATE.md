@@ -44,7 +44,7 @@ Status values: `pending` | `done` | `blocked`. Only the loop edits these.
 - [x] 30 frontend-settings             status=done     prereqs=(03,20,21)
 - [x] 40 backup-restore                status=done     prereqs=(10,11,12,13,14,15,16,17,20,30)
 - [x] 41 packaging-installers          status=done     prereqs=(01,02,03,04,05,10,11,12,13,14,15,16,17,20,21,22,23,24,25,26,27,28,29,30,40)
-- [ ] 42 e2e-playwright-flows          status=pending  prereqs=(05,20,21,22,23,24,25,26,27,28,29,30,40)
+- [x] 42 e2e-playwright-flows          status=done     prereqs=(05,20,21,22,23,24,25,26,27,28,29,30,40)
 - [ ] 43 launch-readme-screencast      status=pending  prereqs=(41,42)
 
 Plan files: `docs/superpowers/plans/2026-05-24-NN-<slug>.md`
