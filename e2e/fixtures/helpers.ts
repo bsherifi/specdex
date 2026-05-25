@@ -74,6 +74,38 @@ export async function invoke<T = unknown>(
   )) as T;
 }
 
+/// Boeing-style schema with a single primary `code` field. `Schema` is
+/// `#[serde(transparent)]` over `Vec<FieldDef>` in core, so the wire shape is
+/// a bare array (not `{ fields: [...] }`).
+export const BOEING_SCHEMA = [
+  { name: "code", label: "Code", type: { kind: "text" }, required: true, primary: true },
+];
+
+/// Pre-seed identity (skips the onboarding identity step for flows that only
+/// assert a later path).
+export async function seedIdentity(driver: WebDriver, displayName = "Sara Chen") {
+  await invoke(driver, "identity_set", { displayName });
+}
+
+/// Pre-seed a Boeing-style KB and return its id.
+export async function seedBoeingKb(
+  driver: WebDriver,
+  name = "Boeing Specs",
+): Promise<string> {
+  const kb = await invoke<{ id: string }>(driver, "kb_create", {
+    args: { name, description: null, schema: BOEING_SCHEMA, highlight_color: "#f59e0b" },
+  });
+  return kb.id;
+}
+
+/// Reload the SPA at `/`. After identity + KB are seeded, `useFirstRunRedirect`
+/// no longer bounces to /onboarding, so this lands on the populated app with
+/// the sidebar chrome (deep-link reloads aren't guaranteed, but `/` always is).
+export async function reloadHome(driver: WebDriver) {
+  await driver.executeScript("window.location.assign('/')");
+  await driver.wait(until.elementLocated(By.css("a[href='/documents']")), 10_000);
+}
+
 /// Navigate by clicking the sidebar link for a route (react-router owns
 /// history; a hard `location.assign` would full-reload the SPA). Falls back
 /// to any anchor whose href matches when the link isn't in the sidebar.

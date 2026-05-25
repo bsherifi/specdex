@@ -37,5 +37,12 @@ export default defineConfig({
       name: "showcase-screenshots",
       testMatch: /screenshots\.spec\.ts$/,
     },
+    {
+      // §8 user flows A–G. Each test gets a fresh SPECDEX_DATA_DIR via the
+      // fixture (e2e/fixtures/tauri.ts), so they stay isolated despite the
+      // single shared tauri-driver.
+      name: "flows",
+      testMatch: /flow-[a-g]-.*\.spec\.ts$/,
+    },
   ],
 });
