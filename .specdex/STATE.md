@@ -40,7 +40,7 @@ Status values: `pending` | `done` | `blocked`. Only the loop edits these.
 - [x] 26 frontend-schema-editor        status=done     prereqs=(03,20,21,25)
 - [x] 27 frontend-entry-form           status=done     prereqs=(03,20,21,24,25)
 - [x] 28 frontend-ingest-queue         status=done     prereqs=(03,20,21,23)
-- [ ] 29 frontend-onboarding           status=pending  prereqs=(03,20,21,25)
+- [x] 29 frontend-onboarding           status=done     prereqs=(03,20,21,25)
 - [ ] 30 frontend-settings             status=pending  prereqs=(03,20,21)
 - [ ] 40 backup-restore                status=pending  prereqs=(10,11,12,13,14,15,16,17,20,30)
 - [ ] 41 packaging-installers          status=pending  prereqs=(01,02,03,04,05,10,11,12,13,14,15,16,17,20,21,22,23,24,25,26,27,28,29,30,40)
