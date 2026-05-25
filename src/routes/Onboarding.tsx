@@ -22,9 +22,6 @@ export default function Onboarding(): JSX.Element {
   const { push } = useToast();
   const navigate = useNavigate();
 
-  // navigate becomes useful in Task 6 (Done step); suppress unused-warning until then.
-  void navigate;
-
   const pickTemplate = (t: KbTemplate) => {
     setChosenTpl(t);
     setKbName(t.name);
@@ -111,6 +108,17 @@ export default function Onboarding(): JSX.Element {
               <Button variant="outline" onClick={() => setStep(1)}>Back</Button>
               <Button onClick={() => void finish()} disabled={!kbName.trim()}>Create</Button>
             </div>
+          </>
+        )}
+
+        {step === 3 && (
+          <>
+            <h2 className="text-lg font-semibold">You're ready</h2>
+            <p className="text-muted-foreground">
+              Drag PDFs onto the app to start scanning. New codes auto-highlight as you add
+              entries.
+            </p>
+            <Button onClick={() => navigate("/")}>Open Specdex</Button>
           </>
         )}
       </div>

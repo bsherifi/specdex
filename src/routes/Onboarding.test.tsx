@@ -56,3 +56,17 @@ describe("Onboarding — KB-create step", () => {
     });
   });
 });
+
+describe("Onboarding — Done step", () => {
+  it("renders the 'You're ready' heading + Open button after step 2 completes", async () => {
+    renderOnboarding();
+    fireEvent.click(screen.getByRole("button", { name: "Next" })); // 0 → 1
+    fireEvent.change(screen.getByPlaceholderText(/Sara Chen/i), { target: { value: "Sara" } });
+    fireEvent.click(screen.getByRole("button", { name: "Next" })); // 1 → 2
+    fireEvent.click(screen.getByRole("button", { name: /Create/ })); // 2 → 3
+    await waitFor(() => {
+      expect(screen.getByText(/You're ready/i)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /Open Specdex/i })).toBeInTheDocument();
+    });
+  });
+});
