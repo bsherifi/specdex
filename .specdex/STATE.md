@@ -42,7 +42,7 @@ Status values: `pending` | `done` | `blocked`. Only the loop edits these.
 - [x] 28 frontend-ingest-queue         status=done     prereqs=(03,20,21,23)
 - [x] 29 frontend-onboarding           status=done     prereqs=(03,20,21,25)
 - [x] 30 frontend-settings             status=done     prereqs=(03,20,21)
-- [ ] 40 backup-restore                status=pending  prereqs=(10,11,12,13,14,15,16,17,20,30)
+- [x] 40 backup-restore                status=done     prereqs=(10,11,12,13,14,15,16,17,20,30)
 - [ ] 41 packaging-installers          status=pending  prereqs=(01,02,03,04,05,10,11,12,13,14,15,16,17,20,21,22,23,24,25,26,27,28,29,30,40)
 - [ ] 42 e2e-playwright-flows          status=pending  prereqs=(05,20,21,22,23,24,25,26,27,28,29,30,40)
 - [ ] 43 launch-readme-screencast      status=pending  prereqs=(41,42)
