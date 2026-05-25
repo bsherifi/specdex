@@ -2,7 +2,7 @@ import type { JSX } from "react";
 import { useEffect } from "react";
 import { RouterProvider } from "react-router-dom";
 import { router } from "@/router";
-import { ToastHost } from "@/components/shared";
+import { Toaster } from "@/components/ui/sonner";
 import { IngestQueuePanel, PreIngestDialog } from "@/components/IngestQueue";
 import { subscribeToSpecdexEvents } from "@/lib/events";
 
@@ -15,10 +15,11 @@ export function App(): JSX.Element {
     return () => unlisten?.();
   }, []);
   return (
-    <ToastHost>
+    <>
       <RouterProvider router={router} />
       <PreIngestDialog />
       <IngestQueuePanel />
-    </ToastHost>
+      <Toaster richColors closeButton />
+    </>
   );
 }

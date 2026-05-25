@@ -1,7 +1,6 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ToastHost } from "@/components/shared";
 import { useStore } from "@/lib/store";
 
 const mocks = vi.hoisted(() => ({
@@ -38,11 +37,9 @@ import Documents from "./Documents";
 
 const renderDocs = () =>
   render(
-    <ToastHost>
-      <MemoryRouter>
-        <Documents />
-      </MemoryRouter>
-    </ToastHost>,
+    <MemoryRouter>
+      <Documents />
+    </MemoryRouter>,
   );
 
 describe("Documents route", () => {

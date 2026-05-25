@@ -12,7 +12,8 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { EmptyState, KbBadge, ConfirmModal, useToast } from "@/components/shared";
+import { EmptyState, KbBadge, ConfirmModal } from "@/components/shared";
+import { toast } from "sonner";
 import { KbColorPicker } from "@/components/KbColorPicker";
 import { EntryForm } from "@/components/EntryForm";
 import {
@@ -57,7 +58,6 @@ export default function KbDetail(): JSX.Element {
   const [newEntryOpen, setNewEntryOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmKbDelete, setConfirmKbDelete] = useState(false);
-  const { push } = useToast();
   const staleByKb = useStore((s) => s.entryStaleByKb);
   const staleForKb = id ? staleByKb[id] ?? 0 : 0;
 
@@ -87,14 +87,14 @@ export default function KbDetail(): JSX.Element {
   const setColor = async (name: KbColorName) => {
     try {
       unwrap(await kbUpdateMeta(kb.id, { highlight_color: KB_COLOR_HEX[name] }));
-      push({ title: "Color updated", variant: "success" });
+      toast.success("Color updated");
       setColorOpen(false);
       void kbGet(kb.id).then((res) => {
         const k = unwrap<WireKb>(res);
         setKb({ ...k, schema: normalizeSchema(k.schema) });
       });
     } catch (e) {
-      push({ title: "Color update failed", description: String(e), variant: "error" });
+      toast.error("Color update failed", { description: String(e) });
     }
   };
 
@@ -105,14 +105,14 @@ export default function KbDetail(): JSX.Element {
     }
     try {
       unwrap(await kbUpdateMeta(kb.id, { name: nameDraft.trim() }));
-      push({ title: "Renamed", variant: "success" });
+      toast.success("Renamed");
       setEditName(false);
       void kbGet(kb.id).then((res) => {
         const k = unwrap<WireKb>(res);
         setKb({ ...k, schema: normalizeSchema(k.schema) });
       });
     } catch (e) {
-      push({ title: "Rename failed", description: String(e), variant: "error" });
+      toast.error("Rename failed", { description: String(e) });
     }
   };
 
@@ -277,7 +277,7 @@ export default function KbDetail(): JSX.Element {
             setSelection(new Set());
             setConfirmDelete(false);
           } catch (e) {
-            push({ title: "Delete failed", description: String(e), variant: "error" });
+            toast.error("Delete failed", { description: String(e) });
           }
         }}
         onCancel={() => setConfirmDelete(false)}
@@ -293,7 +293,7 @@ export default function KbDetail(): JSX.Element {
             unwrap(await kbDelete(kb.id));
             navigate("/kbs");
           } catch (e) {
-            push({ title: "Delete failed", description: String(e), variant: "error" });
+            toast.error("Delete failed", { description: String(e) });
           }
         }}
         onCancel={() => setConfirmKbDelete(false)}

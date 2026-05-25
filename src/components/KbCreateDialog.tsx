@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { KbColorPicker } from "./KbColorPicker";
 import { KB_COLOR_HEX, defaultKbColor, type KbColorName } from "@/lib/theme";
 import { kbCreate, unwrap } from "@/lib/tauri";
-import { useToast } from "@/components/shared";
+import { toast } from "sonner";
 import type { FieldDef } from "@/lib/schema-diff";
 
 interface Props {
@@ -46,7 +46,6 @@ export function KbCreateDialog({ open, existingCount, onClose, onCreated }: Prop
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [color, setColor] = useState<KbColorName>(defaultKbColor(existingCount));
-  const { push } = useToast();
 
   const submit = async () => {
     try {
@@ -56,13 +55,13 @@ export function KbCreateDialog({ open, existingCount, onClose, onCreated }: Prop
         schema: STARTER_SCHEMA,
         highlight_color: KB_COLOR_HEX[color],
       }));
-      push({ title: "KB created", variant: "success" });
+      toast.success("KB created");
       setName("");
       setDescription("");
       onCreated();
       onClose();
     } catch (e) {
-      push({ title: "Couldn't create KB", description: String(e), variant: "error" });
+      toast.error("Couldn't create KB", { description: String(e) });
     }
   };
 

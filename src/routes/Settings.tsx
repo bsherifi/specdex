@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import { save, open } from "@tauri-apps/plugin-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/shared";
+import { toast } from "sonner";
 import {
   backupExport,
   backupRestore,
@@ -28,7 +28,6 @@ export default function Settings(): JSX.Element {
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [identityName, setIdentityName] = useState("");
   const [draft, setDraft] = useState("");
-  const { push } = useToast();
 
   const reload = async () => {
     const s = (await getAppSettings()) as unknown as AppSettings;
@@ -47,15 +46,15 @@ export default function Settings(): JSX.Element {
   const saveIdentity = async () => {
     const v = draft.trim();
     if (!v) {
-      push({ title: "Display name cannot be empty", variant: "error" });
+      toast.error("Display name cannot be empty");
       return;
     }
     try {
       unwrap(await identitySet(v));
       setIdentityName(v);
-      push({ title: "Identity updated", variant: "success" });
+      toast.success("Identity updated");
     } catch (e) {
-      push({ title: "Identity update failed", description: String(e), variant: "error" });
+      toast.error("Identity update failed", { description: String(e) });
     }
   };
 
@@ -67,9 +66,9 @@ export default function Settings(): JSX.Element {
     if (!path) return;
     try {
       unwrap(await backupExport(path));
-      push({ title: "Backup written", description: path, variant: "success" });
+      toast.success("Backup written", { description: path });
     } catch (e) {
-      push({ title: "Backup failed", description: String(e), variant: "error" });
+      toast.error("Backup failed", { description: String(e) });
     }
   };
 
@@ -83,10 +82,10 @@ export default function Settings(): JSX.Element {
     }
     try {
       unwrap(await backupRestore(path));
-      push({ title: "Restore complete", variant: "success" });
+      toast.success("Restore complete");
       void reload();
     } catch (e) {
-      push({ title: "Restore failed", description: String(e), variant: "error" });
+      toast.error("Restore failed", { description: String(e) });
     }
   };
 
@@ -95,7 +94,7 @@ export default function Settings(): JSX.Element {
     try {
       unwrap(await revealInFileManager(settings.data_dir));
     } catch (e) {
-      push({ title: "Couldn't open folder", description: String(e), variant: "error" });
+      toast.error("Couldn't open folder", { description: String(e) });
     }
   };
 

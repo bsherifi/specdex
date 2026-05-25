@@ -14,7 +14,7 @@ import {
   type WireSchema,
 } from "@/lib/schema-diff";
 import { kbGet, kbMigrateSchema, unwrap } from "@/lib/tauri";
-import { useToast } from "@/components/shared";
+import { toast } from "sonner";
 
 const NEW_FIELD = (i: number): FieldDef => ({
   name: `field_${i}`,
@@ -33,7 +33,6 @@ export default function SchemaEditor(): JSX.Element {
   const [entryCount] = useState(0);
   const [confirm, setConfirm] = useState(false);
   const [kbName, setKbName] = useState("");
-  const { push } = useToast();
 
   useEffect(() => {
     if (!id) return;
@@ -81,10 +80,10 @@ export default function SchemaEditor(): JSX.Element {
   const apply = async () => {
     try {
       unwrap(await kbMigrateSchema(id, schemaToWire(draft)));
-      push({ title: "Schema updated", variant: "success" });
+      toast.success("Schema updated");
       navigate(`/kbs/${id}`);
     } catch (e) {
-      push({ title: "Migration failed", description: String(e), variant: "error" });
+      toast.error("Migration failed", { description: String(e) });
     }
   };
 

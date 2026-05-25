@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/shared";
+import { toast } from "sonner";
 import { KbColorPicker } from "@/components/KbColorPicker";
 import { TEMPLATES, EMPTY_TEMPLATE, type KbTemplate } from "@/dev/templates";
 import { identitySet, kbCreate, unwrap } from "@/lib/tauri";
@@ -20,7 +20,6 @@ export default function Onboarding(): JSX.Element {
   const [kbName, setKbName] = useState(chosenTpl.name);
   const [kbDesc, setKbDesc] = useState(chosenTpl.description);
   const [color, setColor] = useState<KbColorName>("amber");
-  const { push } = useToast();
   const navigate = useNavigate();
 
   const pickTemplate = (t: KbTemplate) => {
@@ -40,7 +39,7 @@ export default function Onboarding(): JSX.Element {
       }));
       setStep(3);
     } catch (e) {
-      push({ title: "Onboarding failed", description: String(e), variant: "error" });
+      toast.error("Onboarding failed", { description: String(e) });
     }
   };
 

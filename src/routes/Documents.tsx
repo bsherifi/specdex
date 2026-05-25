@@ -13,7 +13,8 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { EmptyState, ConfirmModal, useToast } from "@/components/shared";
+import { EmptyState, ConfirmModal } from "@/components/shared";
+import { toast } from "sonner";
 import { FileDropZone } from "@/components/FileDropZone";
 import { useStore } from "@/lib/store";
 import { sourceDocListRecent, sourceDocDelete, unwrap } from "@/lib/tauri";
@@ -35,7 +36,6 @@ export default function Documents(): JSX.Element {
   const [sortAsc, setSortAsc] = useState(false);
   const [selection, setSelection] = useState<Set<string>>(new Set());
   const [confirm, setConfirm] = useState<{ open: boolean; ids: string[] }>({ open: false, ids: [] });
-  const { push } = useToast();
   const navigate = useNavigate();
   const setPending = useStore((s) => s.setPendingIngest);
   const completedIngestCount = useStore((s) => s.ingestJobs.filter((j) => j.state === "done").length);
@@ -90,7 +90,7 @@ export default function Documents(): JSX.Element {
       if (!picked) return;
       handleDrop(Array.isArray(picked) ? picked : [picked]);
     } catch (e) {
-      push({ title: "File picker failed", description: String(e), variant: "error" });
+      toast.error("File picker failed", { description: String(e) });
     }
   };
 
@@ -99,7 +99,7 @@ export default function Documents(): JSX.Element {
       try {
         unwrap(await sourceDocDelete(id));
       } catch (e) {
-        push({ title: "Delete failed", description: String(e), variant: "error" });
+        toast.error("Delete failed", { description: String(e) });
       }
     }
     setSelection(new Set());

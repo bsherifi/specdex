@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type JSX } from "react";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/shared";
+import { toast } from "sonner";
 import { TextField } from "./fields/TextField";
 import { TextMultilineField } from "./fields/TextMultilineField";
 import { NumberField } from "./fields/NumberField";
@@ -35,7 +35,6 @@ export function EntryForm({ kbId, entryId, initialCapture, onSaved, onCancel }: 
   const [aliases, setAliases] = useState<string[]>([]);
   const [source, setSource] = useState<SourceRef | null>(initialCapture ?? null);
   const [notes, setNotes] = useState("");
-  const { push } = useToast();
 
   useEffect(() => {
     void kbGet(kbId).then((res) => {
@@ -92,16 +91,14 @@ export function EntryForm({ kbId, entryId, initialCapture, onSaved, onCancel }: 
           }),
         );
         if (res.warning) {
-          push({
-            title: "Possible duplicate",
+          toast.warning("Possible duplicate", {
             description: "Another entry with this primary value already exists.",
-            variant: "warning",
           });
         }
         onSaved(res.entry.id);
       }
     } catch (e) {
-      push({ title: "Couldn't save entry", description: String(e), variant: "error" });
+      toast.error("Couldn't save entry", { description: String(e) });
     }
   };
 

@@ -1,7 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
-import { ToastHost } from "@/components/shared";
 
 vi.mock("@/lib/tauri", () => ({
   getAppSettings: vi.fn(async () => ({
@@ -26,11 +25,9 @@ import Settings from "./Settings";
 
 const renderSettings = () =>
   render(
-    <ToastHost>
-      <MemoryRouter>
-        <Settings />
-      </MemoryRouter>
-    </ToastHost>,
+    <MemoryRouter>
+      <Settings />
+    </MemoryRouter>,
   );
 
 describe("Settings — Application data card", () => {

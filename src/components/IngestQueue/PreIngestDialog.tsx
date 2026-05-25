@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/lib/store";
 import { ingestFiles, unwrap } from "@/lib/tauri";
-import { useToast } from "@/components/shared";
+import { toast } from "sonner";
 
 interface FileRow {
   path: string;
@@ -16,7 +16,6 @@ export function PreIngestDialog(): JSX.Element {
   const pending = useStore((s) => s.pendingIngest);
   const clear = useStore((s) => s.clearPendingIngest);
   const [rows, setRows] = useState<FileRow[]>([]);
-  const { push } = useToast();
 
   useEffect(() => {
     setRows(pending.map((p) => ({ ...p, ocr: false })));
@@ -27,13 +26,11 @@ export function PreIngestDialog(): JSX.Element {
   const start = async () => {
     try {
       unwrap(await ingestFiles({ files: rows.map((r) => ({ path: r.path, ocr: r.ocr })) }));
-      push({
-        title: "Ingest started",
+      toast.info("Ingest started", {
         description: `${rows.length} file(s) queued.`,
-        variant: "info",
       });
     } catch (e) {
-      push({ title: "Ingest failed to start", description: String(e), variant: "error" });
+      toast.error("Ingest failed to start", { description: String(e) });
     }
     clear();
   };

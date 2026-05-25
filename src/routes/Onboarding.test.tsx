@@ -1,7 +1,6 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
-import { ToastHost } from "@/components/shared";
 
 vi.mock("@/lib/tauri", () => ({
   identitySet: vi.fn(async () => ({ status: "ok", data: {} })),
@@ -16,11 +15,9 @@ import Onboarding from "./Onboarding";
 
 function renderOnboarding() {
   return render(
-    <ToastHost>
-      <MemoryRouter>
-        <Onboarding />
-      </MemoryRouter>
-    </ToastHost>,
+    <MemoryRouter>
+      <Onboarding />
+    </MemoryRouter>,
   );
 }
 
