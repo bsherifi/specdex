@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { JSX } from "react";
-import { FolderOpen } from "lucide-react";
+import { FolderOpen, Save, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/shared";
@@ -98,6 +98,29 @@ export default function Settings(): JSX.Element {
           <p>Bundled: <code>eng</code>, <code>osd</code>.</p>
           <p className="mt-1 text-xs text-muted-foreground">
             Additional language packs are a v1.1 download.
+          </p>
+        </div>
+      </section>
+
+      <section className="space-y-2">
+        <h2 className="text-sm font-semibold uppercase text-muted-foreground">Backup &amp; restore</h2>
+        <div className="rounded-md border border-border p-3 space-y-2">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => push({ title: "Backup", description: "Implemented in plan 40", variant: "info" })}
+            >
+              <Save className="mr-2 h-4 w-4" /> Export full backup ZIP
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => push({ title: "Restore", description: "Implemented in plan 40", variant: "info" })}
+            >
+              <Upload className="mr-2 h-4 w-4" /> Restore from backup ZIP
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Restoring replaces all data. Disabled until plan 40 ships the backend.
           </p>
         </div>
       </section>

@@ -74,3 +74,13 @@ describe("Settings — OCR languages card", () => {
     });
   });
 });
+
+describe("Settings — Backup card", () => {
+  it("renders Export and Restore buttons", async () => {
+    renderSettings();
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /Export full backup ZIP/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /Restore from backup ZIP/i })).toBeInTheDocument();
+    });
+  });
+});
