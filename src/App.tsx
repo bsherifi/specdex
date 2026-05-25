@@ -1,9 +1,23 @@
 import type { JSX } from "react";
-import { DesignShowcase } from "@/dev/DesignShowcase";
+import { useEffect } from "react";
+import { RouterProvider } from "react-router-dom";
+import { router } from "@/router";
+import { ToastHost } from "@/components/shared";
 import { useSystemTheme } from "@/hooks/useSystemTheme";
+import { subscribeToSpecdexEvents } from "@/lib/events";
 
 export function App(): JSX.Element {
-  // Side effect: keeps `dark` class on <html> in sync with system theme.
   useSystemTheme();
-  return <DesignShowcase />;
+  useEffect(() => {
+    let unlisten: (() => void) | undefined;
+    void subscribeToSpecdexEvents().then((fn) => {
+      unlisten = fn;
+    });
+    return () => unlisten?.();
+  }, []);
+  return (
+    <ToastHost>
+      <RouterProvider router={router} />
+    </ToastHost>
+  );
 }
