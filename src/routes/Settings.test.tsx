@@ -42,3 +42,24 @@ describe("Settings — Application data card", () => {
     });
   });
 });
+
+describe("Settings — Identity card", () => {
+  it("renders the Identity heading + Save button", async () => {
+    renderSettings();
+    await waitFor(() => {
+      expect(screen.getByText(/Identity/i)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Save" })).toBeInTheDocument();
+    });
+  });
+
+  it("calls identitySet when Save is clicked with a non-empty draft", async () => {
+    const { identitySet } = await import("@/lib/tauri");
+    renderSettings();
+    await waitFor(() => screen.getByPlaceholderText(/Display name/i));
+    fireEvent.change(screen.getByPlaceholderText(/Display name/i), { target: { value: "Sara" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => {
+      expect(identitySet).toHaveBeenCalledWith("Sara");
+    });
+  });
+});

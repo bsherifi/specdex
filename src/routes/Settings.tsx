@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import type { JSX } from "react";
 import { FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/shared";
 import {
   getAppSettings,
   identityGet,
+  identitySet,
   revealInFileManager,
 } from "@/lib/tauri";
 
@@ -21,7 +23,7 @@ export default function Settings(): JSX.Element {
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [identityName, setIdentityName] = useState("");
   const [draft, setDraft] = useState("");
-  const { push: _push } = useToast();
+  const { push } = useToast();
 
   const reload = async () => {
     const s = (await getAppSettings()) as unknown as AppSettings;
@@ -37,12 +39,18 @@ export default function Settings(): JSX.Element {
     void reload();
   }, []);
 
-  if (!settings) return <div>Loading…</div>;
+  const saveIdentity = async () => {
+    const v = draft.trim();
+    if (!v) {
+      push({ title: "Display name cannot be empty", variant: "error" });
+      return;
+    }
+    await identitySet(v);
+    setIdentityName(v);
+    push({ title: "Identity updated", variant: "success" });
+  };
 
-  // identityName / draft become useful in Task 2; suppress unused warnings for now.
-  void identityName;
-  void draft;
-  void _push;
+  if (!settings) return <div>Loading…</div>;
 
   return (
     <div className="max-w-2xl space-y-8">
@@ -64,6 +72,22 @@ export default function Settings(): JSX.Element {
           </Button>
           <p className="mt-2 text-xs text-muted-foreground">
             Changing the data directory is not supported in v1.
+          </p>
+        </div>
+      </section>
+
+      <section className="space-y-2">
+        <h2 className="text-sm font-semibold uppercase text-muted-foreground">Identity</h2>
+        <div className="rounded-md border border-border p-3 space-y-2">
+          <p className="text-sm text-muted-foreground">
+            Current: <span className="font-medium text-foreground">{identityName || "—"}</span>
+          </p>
+          <div className="flex items-center gap-2">
+            <Input value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Display name" />
+            <Button onClick={() => void saveIdentity()}>Save</Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Stamped on every entry as <code>edited_by</code>.
           </p>
         </div>
       </section>
