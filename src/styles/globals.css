@@ -143,6 +143,10 @@
     @apply bg-background text-foreground antialiased;
     font-size: 15px; /* Geist is compact; 15px reads denser than default */
     font-feature-settings: "rlig" 1, "calt" 1;
+    /* Native-app feel: the body never scrolls; the app shell owns an inner
+       scroll container (and minimal routes wrap their own). Phase 3. */
+    overflow: hidden;
+    overscroll-behavior: none;
   }
 
   /* Native-app feel: hide scrollbars by default. Areas that genuinely scroll
