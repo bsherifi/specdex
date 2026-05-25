@@ -1,0 +1,73 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build (${{ matrix.platform.target }})
+    runs-on: ${{ matrix.platform.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - { runner: ubuntu-22.04, target: linux,       pdfium: linux       }
+          - { runner: macos-14,     target: macos-arm,   pdfium: macos-arm   }
+          - { runner: windows-2022, target: windows-x64, pdfium: windows-x64 }
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Linux deps
+        if: matrix.platform.target == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev \
+            librsvg2-dev libsoup-3.0-dev patchelf
+
+      # macOS/Windows: no extra OCR deps — ocrs is pure Rust.
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          rustflags: ""
+          cache-workspaces: src-tauri
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.5.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Download PDFium
+        shell: bash
+        run: ./installers/download-pdfium.sh ${{ matrix.platform.pdfium }}
+
+      - name: Download ocrs models
+        shell: bash
+        run: ./installers/download-ocrs-models.sh
+
+      - name: cargo tauri build
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+        run: pnpm tauri build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: specdex-${{ matrix.platform.target }}
+          path: |
+            src-tauri/target/release/bundle/**/*.msi
+            src-tauri/target/release/bundle/**/*.dmg
+            src-tauri/target/release/bundle/**/*.AppImage
+            src-tauri/target/release/bundle/**/*.deb
+          retention-days: 30
