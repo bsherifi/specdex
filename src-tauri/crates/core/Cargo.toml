@@ -31,6 +31,7 @@ sha2 = "0.10"
 aho-corasick = "1.1"
 dashmap = "6.1"
 tantivy = "0.22"
+zip = { version = "2.1", default-features = false, features = ["deflate"] }
 
 [dev-dependencies]
 serde_json = { workspace = true }

@@ -22,6 +22,7 @@ tauri-build = { workspace = true }
 specdex_core = { path = "../core" }
 specdex_parsers = { path = "../parsers", features = ["real-parsers"] }
 tauri = { workspace = true }
+tauri-plugin-dialog = "2"
 specta = { workspace = true }
 tauri-specta = { workspace = true }
 specta-typescript = { workspace = true }

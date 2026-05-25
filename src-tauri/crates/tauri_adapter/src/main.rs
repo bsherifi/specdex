@@ -68,6 +68,7 @@ fn main() {
     let specta_builder = bindings_export::builder();
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .invoke_handler(specta_builder.invoke_handler())
         .setup(move |app| {
             // Resolve data dir + open db.
