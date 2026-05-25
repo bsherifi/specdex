@@ -60,6 +60,7 @@ export async function subscribeToSpecdexEvents(): Promise<UnlistenFn> {
           filename: "",
           progress: 1,
           state: "done",
+          sourceDocId: ev.source_doc_id,
         });
         break;
       case "ingest_failed":

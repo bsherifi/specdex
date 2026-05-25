@@ -8,6 +8,7 @@ interface IngestJobRow {
   progress: number;
   state: "queued" | "running" | "done" | "failed";
   message?: string;
+  sourceDocId?: string;
 }
 
 interface SpecdexStore {
@@ -25,6 +26,12 @@ interface SpecdexStore {
   ingestJobs: IngestJobRow[];
   upsertIngestJob: (row: IngestJobRow) => void;
   clearDoneIngestJobs: () => void;
+
+  pendingIngest: { path: string; filename: string }[];
+  setPendingIngest: (files: { path: string; filename: string }[]) => void;
+  clearPendingIngest: () => void;
+  queueMinimized: boolean;
+  setQueueMinimized: (m: boolean) => void;
 
   /// Document viewer KB-scope dropdown selection — keyed by source_doc_id.
   /// Reset to "all" whenever a viewer reopens (§7.3).
@@ -59,6 +66,12 @@ export const useStore = create<SpecdexStore>()(
       }),
     clearDoneIngestJobs: () =>
       set((p) => ({ ingestJobs: p.ingestJobs.filter((j) => j.state !== "done") })),
+
+    pendingIngest: [],
+    setPendingIngest: (files) => set({ pendingIngest: files }),
+    clearPendingIngest: () => set({ pendingIngest: [] }),
+    queueMinimized: false,
+    setQueueMinimized: (m) => set({ queueMinimized: m }),
 
     scopeByDoc: {},
     setDocScope: (docId, scope) =>
