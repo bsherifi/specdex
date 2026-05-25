@@ -47,6 +47,14 @@ interface Entry {
   updated_at: string;
 }
 
+// Commands return the tauri-specta `{ status, data | error }` wrapper (see the
+// contract note in `@/lib/tauri`); narrow on `status` rather than casting past it.
+function unwrap<T>(res: unknown): T {
+  const r = res as { status: "ok"; data: T } | { status: "error"; error: unknown };
+  if (r.status === "error") throw new Error(JSON.stringify(r.error));
+  return r.data;
+}
+
 export default function KbDetail(): JSX.Element {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -66,7 +74,7 @@ export default function KbDetail(): JSX.Element {
   useEffect(() => {
     if (!id) return;
     void kbGet(id).then((res) => {
-      const k = res as Kb;
+      const k = unwrap<Kb>(res);
       setKb(k);
       setNameDraft(k.name);
     });
@@ -75,7 +83,7 @@ export default function KbDetail(): JSX.Element {
   useEffect(() => {
     if (!id) return;
     void entryList({ kb_id: id, filter: filter || undefined, limit: 5000 }).then((res) =>
-      setEntries(res as Entry[]),
+      setEntries(unwrap<Entry[]>(res)),
     );
   }, [id, filter, staleByKb[id ?? ""]]);
 
@@ -90,7 +98,7 @@ export default function KbDetail(): JSX.Element {
     await kbUpdateMeta(kb.id, { highlight_color: KB_COLOR_HEX[name] });
     push({ title: "Color updated", variant: "success" });
     setColorOpen(false);
-    void kbGet(kb.id).then((res) => setKb(res as Kb));
+    void kbGet(kb.id).then((res) => setKb(unwrap<Kb>(res)));
   };
 
   const saveName = async () => {
@@ -101,7 +109,7 @@ export default function KbDetail(): JSX.Element {
     await kbUpdateMeta(kb.id, { name: nameDraft.trim() });
     push({ title: "Renamed", variant: "success" });
     setEditName(false);
-    void kbGet(kb.id).then((res) => setKb(res as Kb));
+    void kbGet(kb.id).then((res) => setKb(unwrap<Kb>(res)));
   };
 
   return (

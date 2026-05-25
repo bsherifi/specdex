@@ -16,14 +16,21 @@ interface KbSummary {
   updated_at: string;
 }
 
+// Commands return the tauri-specta `{ status, data | error }` wrapper (see the
+// contract note in `@/lib/tauri`); narrow on `status` rather than casting past it.
+function unwrap<T>(res: unknown): T {
+  const r = res as { status: "ok"; data: T } | { status: "error"; error: unknown };
+  if (r.status === "error") throw new Error(JSON.stringify(r.error));
+  return r.data;
+}
+
 export default function KbList(): JSX.Element {
   const [kbs, setKbs] = useState<KbSummary[]>([]);
   const [dialog, setDialog] = useState(false);
   const staleCounter = useStore((s) => s.kbsStaleCounter);
 
   const reload = async () => {
-    const res = (await kbListSummaries()) as KbSummary[];
-    setKbs(res);
+    setKbs(unwrap<KbSummary[]>(await kbListSummaries()));
   };
 
   useEffect(() => {
