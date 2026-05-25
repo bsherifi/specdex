@@ -33,9 +33,30 @@
     "icon": [
       "icons/icon.png"
     ],
+    "resources": {
+      "binaries/pdfium/**/*": "binaries/pdfium",
+      "binaries/ocrs/*.rten": "binaries/ocrs"
+    },
     "copyright": "Copyright © 2026 bsherifi. MIT license.",
     "category": "Productivity",
     "shortDescription": "Local-first knowledge base for engineering specs.",
-    "longDescription": "Specdex is a desktop application for curating, searching, and back-referencing engineering specs and codes from PDF source documents — fully local, no AI, no cloud."
+    "longDescription": "Specdex is a desktop application for curating, searching, and back-referencing engineering specs and codes from PDF source documents — fully local, no AI, no cloud.",
+    "windows": {
+      "wix": {
+        "language": ["en-US"]
+      }
+    },
+    "macOS": {
+      "minimumSystemVersion": "12.0",
+      "frameworks": []
+    },
+    "linux": {
+      "appimage": {
+        "bundleMediaFramework": false
+      },
+      "deb": {
+        "depends": ["libwebkit2gtk-4.1-0", "libgtk-3-0"]
+      }
+    }
   }
 }

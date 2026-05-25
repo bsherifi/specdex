@@ -41,19 +41,52 @@ fn init_tracing(log_dir: &std::path::Path) {
         .init();
 }
 
-fn resolve_pdfium_path() -> Option<PathBuf> {
-    std::env::var_os("SPECDEX_PDFIUM_PATH").map(PathBuf::from)
+fn resolve_pdfium_path(app: &tauri::AppHandle) -> Option<PathBuf> {
+    if let Ok(p) = std::env::var("SPECDEX_PDFIUM_PATH") {
+        return Some(PathBuf::from(p));
+    }
+    let resource_dir = app.path().resource_dir().ok()?;
+    let candidate =
+        resource_dir
+            .join("binaries")
+            .join("pdfium")
+            .join(if cfg!(target_os = "windows") {
+                "windows-x64/x64/bin/pdfium.dll"
+            } else if cfg!(target_os = "macos") {
+                "macos-arm/lib/libpdfium.dylib"
+            } else {
+                "linux/lib/libpdfium.so"
+            });
+    if candidate.exists() {
+        Some(candidate)
+    } else {
+        None
+    }
 }
 
-fn resolve_ocrs_model_paths() -> (PathBuf, PathBuf) {
-    let det = std::env::var_os("SPECDEX_OCRS_DETECTION_MODEL").map_or_else(
-        || PathBuf::from("./binaries/ocrs/text-detection.rten"),
-        PathBuf::from,
-    );
-    let rec = std::env::var_os("SPECDEX_OCRS_RECOGNITION_MODEL").map_or_else(
-        || PathBuf::from("./binaries/ocrs/text-recognition.rten"),
-        PathBuf::from,
-    );
+/// Returns (`detection_model_path`, `recognition_model_path`). Both fall back
+/// to env vars (used in dev/CI before the bundle has been built).
+fn resolve_ocrs_model_paths(app: &tauri::AppHandle) -> (PathBuf, PathBuf) {
+    let env_det = std::env::var("SPECDEX_OCRS_DETECTION_MODEL")
+        .ok()
+        .map(PathBuf::from);
+    let env_rec = std::env::var("SPECDEX_OCRS_RECOGNITION_MODEL")
+        .ok()
+        .map(PathBuf::from);
+    if let (Some(d), Some(r)) = (env_det.clone(), env_rec.clone()) {
+        return (d, r);
+    }
+    let bundled = app
+        .path()
+        .resource_dir()
+        .ok()
+        .map(|rd| rd.join("binaries").join("ocrs"));
+    let det = env_det
+        .or_else(|| bundled.as_ref().map(|p| p.join("text-detection.rten")))
+        .unwrap_or_else(|| PathBuf::from("./binaries/ocrs/text-detection.rten"));
+    let rec = env_rec
+        .or_else(|| bundled.as_ref().map(|p| p.join("text-recognition.rten")))
+        .unwrap_or_else(|| PathBuf::from("./binaries/ocrs/text-recognition.rten"));
     (det, rec)
 }
 
@@ -89,17 +122,18 @@ fn main() {
             let search = Arc::new(Search::open(&app_data.tantivy())?);
 
             // Parsers — fall back to MockParser if real libraries are unavailable.
+            let pdfium_path = resolve_pdfium_path(app.handle());
             let pdfium_parser: Arc<dyn DocumentParser> =
-                match PdfiumParser::new(resolve_pdfium_path().as_deref()) {
+                match PdfiumParser::new(pdfium_path.as_deref()) {
                     Ok(p) => Arc::new(p),
                     Err(e) => {
                         tracing::warn!(?e, "pdfium unavailable; using MockParser");
                         Arc::new(MockParser::new())
                     }
                 };
-            let (ocrs_det, ocrs_rec) = resolve_ocrs_model_paths();
+            let (ocrs_det, ocrs_rec) = resolve_ocrs_model_paths(app.handle());
             let ocr_parser: Arc<dyn DocumentParser> =
-                match OcrParser::new(resolve_pdfium_path().as_deref(), &ocrs_det, &ocrs_rec) {
+                match OcrParser::new(pdfium_path.as_deref(), &ocrs_det, &ocrs_rec) {
                     Ok(p) => Arc::new(p),
                     Err(e) => {
                         tracing::warn!(?e, "ocrs models unavailable; using MockParser");

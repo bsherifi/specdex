@@ -34,6 +34,10 @@ dist/
 src-tauri/gen/
 .tauri/
 
+# Bundled binaries (downloaded at build time)
+src-tauri/binaries/*
+!src-tauri/binaries/.gitkeep
+
 # Editor / OS
 .DS_Store
 *.log
