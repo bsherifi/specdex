@@ -34,7 +34,7 @@ Status values: `pending` | `done` | `blocked`. Only the loop edits these.
 - [x] 20 adapter-commands              status=done     prereqs=(04,10,11,12,13,14,15,16,17)
 - [x] 21 frontend-router-and-state     status=done     prereqs=(03,04,20)
 - [x] 23 frontend-documents-route      status=done     prereqs=(03,20,21)
-- [ ] 25 frontend-kb-routes            status=pending  prereqs=(03,20,21)
+- [x] 25 frontend-kb-routes            status=done     prereqs=(03,20,21)
 - [ ] 22 frontend-search-route         status=pending  prereqs=(03,17,20,21,25)
 - [ ] 24 frontend-pdf-viewer           status=pending  prereqs=(03,20,21,23)
 - [ ] 26 frontend-schema-editor        status=pending  prereqs=(03,20,21,25)
