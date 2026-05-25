@@ -63,3 +63,14 @@ describe("Settings — Identity card", () => {
     });
   });
 });
+
+describe("Settings — OCR languages card", () => {
+  it("lists the bundled traineddata files", async () => {
+    renderSettings();
+    await waitFor(() => {
+      expect(screen.getByText(/OCR language data/i)).toBeInTheDocument();
+      expect(screen.getByText("eng")).toBeInTheDocument();
+      expect(screen.getByText("osd")).toBeInTheDocument();
+    });
+  });
+});

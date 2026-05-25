@@ -91,6 +91,16 @@ export default function Settings(): JSX.Element {
           </p>
         </div>
       </section>
+
+      <section className="space-y-2">
+        <h2 className="text-sm font-semibold uppercase text-muted-foreground">OCR language data</h2>
+        <div className="rounded-md border border-border p-3 text-sm">
+          <p>Bundled: <code>eng</code>, <code>osd</code>.</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Additional language packs are a v1.1 download.
+          </p>
+        </div>
+      </section>
     </div>
   );
 }
