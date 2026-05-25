@@ -38,7 +38,9 @@ pub fn ingest_files(
     for (file, job_id) in args.files.iter().zip(job_ids.iter().copied()) {
         state.events.emit(Event::IngestQueued {
             job_id,
-            filename: file.path.clone(),
+            filename: PathBuf::from(&file.path)
+                .file_name()
+                .map_or_else(|| file.path.clone(), |s| s.to_string_lossy().to_string()),
         });
     }
 

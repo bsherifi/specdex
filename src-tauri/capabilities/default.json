@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Core APIs (events, webview drag-drop, path) plus the dialog plugin for file open/save. Required so the webview may subscribe to specdex:// domain events and use the native file picker.",
+  "windows": ["main"],
+  "permissions": ["core:default", "dialog:default"]
+}

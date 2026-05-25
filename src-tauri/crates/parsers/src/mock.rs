@@ -21,12 +21,24 @@ use crate::parser_trait::DocumentParser;
 #[derive(Default)]
 pub struct MockParser {
     recipes: Mutex<HashMap<PathBuf, ParsedDocument>>,
+    fallback_to_file: bool,
 }
 
 impl MockParser {
     #[must_use]
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// Returns a mock parser that accepts arbitrary files. This is used only as
+    /// a desktop fallback when `PDFium` is unavailable, so the app can still
+    /// exercise ingest/storage flows without native parser assets installed.
+    #[must_use]
+    pub fn permissive() -> Self {
+        Self {
+            recipes: Mutex::new(HashMap::new()),
+            fallback_to_file: true,
+        }
     }
 
     /// Registers a synthetic `ParsedDocument` for a given path. Subsequent
@@ -79,14 +91,66 @@ impl MockParser {
 }
 
 impl DocumentParser for MockParser {
-    fn parse(&self, path: &Path, _opts: ParseOptions) -> Result<ParsedDocument> {
-        self.recipes
-            .lock()
-            .unwrap()
-            .get(path)
-            .cloned()
-            .ok_or_else(|| ParseError::NotFound(path.display().to_string()))
+    fn parse(&self, path: &Path, opts: ParseOptions) -> Result<ParsedDocument> {
+        if let Some(doc) = self.recipes.lock().unwrap().get(path).cloned() {
+            return Ok(doc);
+        }
+        if self.fallback_to_file {
+            return fallback_doc(path, &opts);
+        }
+        Err(ParseError::NotFound(path.display().to_string()))
     }
+}
+
+fn fallback_doc(path: &Path, opts: &ParseOptions) -> Result<ParsedDocument> {
+    let bytes = std::fs::read(path)?;
+    let text = extract_printable_text(&bytes);
+    let filename = path
+        .file_name()
+        .map_or_else(|| path.display().to_string(), |s| s.to_string_lossy().to_string());
+    let text = if text.trim().is_empty() {
+        filename
+    } else {
+        text
+    };
+    let mut doc = MockParser::doc_from_text(&text);
+    doc.page_count = count_pdf_pages(&bytes);
+    doc.ocr_used = opts.ocr;
+    Ok(doc)
+}
+
+fn count_pdf_pages(bytes: &[u8]) -> u32 {
+    const NEEDLE: &[u8] = b"/Type /Page";
+    let count = bytes.windows(NEEDLE.len()).filter(|w| *w == NEEDLE).count();
+    u32::try_from(count.max(1)).unwrap_or(u32::MAX)
+}
+
+fn extract_printable_text(bytes: &[u8]) -> String {
+    const MAX_CHARS: usize = 200_000;
+    let mut out = String::new();
+    let mut last_was_space = false;
+    for &byte in bytes {
+        if out.len() >= MAX_CHARS {
+            break;
+        }
+        let next = match byte {
+            b'\n' | b'\r' | b'\t' | b' ' => Some(' '),
+            0x20..=0x7e => Some(char::from(byte)),
+            _ => None,
+        };
+        if let Some(ch) = next {
+            if ch == ' ' {
+                if !last_was_space {
+                    out.push(ch);
+                    last_was_space = true;
+                }
+            } else {
+                out.push(ch);
+                last_was_space = false;
+            }
+        }
+    }
+    out.trim().to_string()
 }
 
 #[cfg(test)]
@@ -111,6 +175,19 @@ mod tests {
             .parse(std::path::Path::new("/nope.pdf"), ParseOptions::default())
             .unwrap_err();
         assert!(matches!(err, ParseError::NotFound(_)));
+    }
+
+    #[test]
+    fn permissive_parser_accepts_unregistered_files() {
+        let tmp = tempfile::tempdir().unwrap();
+        let path = tmp.path().join("sample.pdf");
+        std::fs::write(&path, b"%PDF-1.4\n1 0 obj\n/Type /Page\nBT (BAC3082) ET\n").unwrap();
+        let mp = MockParser::permissive();
+
+        let doc = mp.parse(&path, ParseOptions::default()).unwrap();
+
+        assert_eq!(doc.page_count, 1);
+        assert!(doc.text.contains("BAC3082"));
     }
 
     #[test]

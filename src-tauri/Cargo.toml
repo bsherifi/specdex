@@ -84,7 +84,9 @@ opt-level = 3
 
 [workspace.dependencies]
 # Tauri 2 — pinned to the 2.x series; minor bumps within 2.x are acceptable.
-tauri = { version = "2", features = [] }
+# `protocol-asset` enables the `asset:`/`http://asset.localhost` custom protocol
+# that the PDF viewer loads source documents through (see tauri.conf.json).
+tauri = { version = "2", features = ["protocol-asset"] }
 tauri-build = { version = "2", features = [] }
 # Type bridge to TS — pinned per autonomous-overnight-plan.md / spec §9.1.
 # This rc.21/rc.22/0.0.9 trio is the newest internally-consistent set that

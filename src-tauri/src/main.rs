@@ -41,27 +41,41 @@ fn init_tracing(log_dir: &std::path::Path) {
         .init();
 }
 
+/// Relative path to the pdfium shared library inside a `binaries/` root,
+/// for the current platform.
+fn pdfium_rel_path() -> &'static str {
+    if cfg!(target_os = "windows") {
+        "pdfium/windows-x64/x64/bin/pdfium.dll"
+    } else if cfg!(target_os = "macos") {
+        "pdfium/macos-arm/lib/libpdfium.dylib"
+    } else {
+        "pdfium/linux/lib/libpdfium.so"
+    }
+}
+
 fn resolve_pdfium_path(app: &tauri::AppHandle) -> Option<PathBuf> {
     if let Ok(p) = std::env::var("SPECDEX_PDFIUM_PATH") {
         return Some(PathBuf::from(p));
     }
-    let resource_dir = app.path().resource_dir().ok()?;
-    let candidate =
-        resource_dir
-            .join("binaries")
-            .join("pdfium")
-            .join(if cfg!(target_os = "windows") {
-                "windows-x64/x64/bin/pdfium.dll"
-            } else if cfg!(target_os = "macos") {
-                "macos-arm/lib/libpdfium.dylib"
-            } else {
-                "linux/lib/libpdfium.so"
-            });
-    if candidate.exists() {
-        Some(candidate)
-    } else {
-        None
+    if let Ok(resource_dir) = app.path().resource_dir() {
+        let candidate = resource_dir.join("binaries").join(pdfium_rel_path());
+        if candidate.exists() {
+            return Some(candidate);
+        }
     }
+    // Debug builds run under `tauri dev`, where the bundle's resource dir isn't
+    // populated. Fall back to the in-repo `src-tauri/binaries/` so the real
+    // parser (not MockParser) is exercised during development.
+    #[cfg(debug_assertions)]
+    {
+        let candidate = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("binaries")
+            .join(pdfium_rel_path());
+        if candidate.exists() {
+            return Some(candidate);
+        }
+    }
+    None
 }
 
 /// Returns (`detection_model_path`, `recognition_model_path`). Both fall back
@@ -76,11 +90,19 @@ fn resolve_ocrs_model_paths(app: &tauri::AppHandle) -> (PathBuf, PathBuf) {
     if let (Some(d), Some(r)) = (env_det.clone(), env_rec.clone()) {
         return (d, r);
     }
+    // Prefer the bundle's resource dir; in debug builds (`tauri dev`) that dir
+    // isn't populated, so fall back to the in-repo `src-tauri/binaries/ocrs`.
     let bundled = app
         .path()
         .resource_dir()
         .ok()
-        .map(|rd| rd.join("binaries").join("ocrs"));
+        .map(|rd| rd.join("binaries").join("ocrs"))
+        .filter(|p| p.exists());
+    #[cfg(debug_assertions)]
+    let bundled = bundled.or_else(|| {
+        Some(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("binaries").join("ocrs"))
+            .filter(|p| p.exists())
+    });
     let det = env_det
         .or_else(|| bundled.as_ref().map(|p| p.join("text-detection.rten")))
         .unwrap_or_else(|| PathBuf::from("./binaries/ocrs/text-detection.rten"));
@@ -127,8 +149,8 @@ fn main() {
                 match PdfiumParser::new(pdfium_path.as_deref()) {
                     Ok(p) => Arc::new(p),
                     Err(e) => {
-                        tracing::warn!(?e, "pdfium unavailable; using MockParser");
-                        Arc::new(MockParser::new())
+                        tracing::warn!(?e, "pdfium unavailable; using permissive MockParser");
+                        Arc::new(MockParser::permissive())
                     }
                 };
             let (ocrs_det, ocrs_rec) = resolve_ocrs_model_paths(app.handle());
@@ -136,8 +158,8 @@ fn main() {
                 match OcrParser::new(pdfium_path.as_deref(), &ocrs_det, &ocrs_rec) {
                     Ok(p) => Arc::new(p),
                     Err(e) => {
-                        tracing::warn!(?e, "ocrs models unavailable; using MockParser");
-                        Arc::new(MockParser::new())
+                        tracing::warn!(?e, "ocrs models unavailable; using permissive MockParser");
+                        Arc::new(MockParser::permissive())
                     }
                 };
 
