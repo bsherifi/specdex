@@ -167,8 +167,6 @@ fn main() {
             tracing::info!("specdex ready");
             Ok(())
         })
-        // Config lives at the workspace root per SPECDEX-V1.md §9.4; this path
-        // is relative to CARGO_MANIFEST_DIR (crates/tauri_adapter/).
-        .run(tauri::generate_context!("../../tauri.conf.json"))
+        .run(tauri::generate_context!())
         .expect("error while running Specdex");
 }

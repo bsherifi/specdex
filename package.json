@@ -16,8 +16,8 @@
     "test:e2e": "bash scripts/run-e2e.sh",
     "test:e2e:update": "bash scripts/run-e2e.sh --update-snapshots",
     "tauri": "tauri",
-    "tauri:dev": "tauri dev --config src-tauri/tauri.conf.json",
-    "tauri:build": "tauri build --config src-tauri/tauri.conf.json",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
     "bindings": "cargo run -p tauri_adapter --manifest-path src-tauri/Cargo.toml -- --export-bindings"
   },
   "dependencies": {
