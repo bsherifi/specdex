@@ -22,6 +22,7 @@ export const router = createBrowserRouter([
       { path: "documents/:id", element: lazyRoute(() => import("@/routes/DocumentViewer")) },
       { path: "kbs", element: lazyRoute(() => import("@/routes/KbList")) },
       { path: "kbs/:id", element: lazyRoute(() => import("@/routes/KbDetail")) },
+      { path: "kbs/:id/schema", element: lazyRoute(() => import("@/routes/SchemaEditor")) },
       { path: "settings", element: lazyRoute(() => import("@/routes/Settings")) },
       { path: "onboarding", element: lazyRoute(() => import("@/routes/Onboarding")) },
       {
