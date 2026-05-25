@@ -17,6 +17,14 @@ const NEW_FIELD = (i: number): FieldDef => ({
   primary: false,
 });
 
+// Commands return the tauri-specta `{ status, data | error }` wrapper (see the
+// contract note in `@/lib/tauri`); narrow on `status` rather than casting past it.
+function unwrap<T>(res: unknown): T {
+  const r = res as { status: "ok"; data: T } | { status: "error"; error: unknown };
+  if (r.status === "error") throw new Error(JSON.stringify(r.error));
+  return r.data;
+}
+
 export default function SchemaEditor(): JSX.Element {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -30,7 +38,7 @@ export default function SchemaEditor(): JSX.Element {
   useEffect(() => {
     if (!id) return;
     void kbGet(id).then((res) => {
-      const k = res as { schema: Schema; name: string };
+      const k = unwrap<{ schema: Schema; name: string }>(res);
       setOriginal(structuredClone(k.schema));
       setDraft(structuredClone(k.schema));
       setKbName(k.name);
@@ -71,7 +79,7 @@ export default function SchemaEditor(): JSX.Element {
 
   const apply = async () => {
     try {
-      await kbMigrateSchema(id, draft);
+      unwrap(await kbMigrateSchema(id, draft));
       push({ title: "Schema updated", variant: "success" });
       navigate(`/kbs/${id}`);
     } catch (e) {

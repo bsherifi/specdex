@@ -29,6 +29,14 @@ interface Props {
   onCancel: () => void;
 }
 
+// Commands return the tauri-specta `{ status, data | error }` wrapper (see the
+// contract note in `@/lib/tauri`); narrow on `status` rather than casting past it.
+function unwrap<T>(res: unknown): T {
+  const r = res as { status: "ok"; data: T } | { status: "error"; error: unknown };
+  if (r.status === "error") throw new Error(JSON.stringify(r.error));
+  return r.data;
+}
+
 export function EntryForm({ kbId, entryId, initialCapture, onSaved, onCancel }: Props): JSX.Element {
   const [schema, setSchema] = useState<Schema | null>(null);
   const [value, setValue] = useState<EntryFormValue | null>(null);
@@ -39,7 +47,7 @@ export function EntryForm({ kbId, entryId, initialCapture, onSaved, onCancel }: 
 
   useEffect(() => {
     void kbGet(kbId).then((res) => {
-      const k = res as { schema: Schema };
+      const k = unwrap<{ schema: Schema }>(res);
       setSchema(k.schema);
       if (!entryId) {
         const init = initialValue(k.schema);
@@ -52,7 +60,7 @@ export function EntryForm({ kbId, entryId, initialCapture, onSaved, onCancel }: 
     });
     if (entryId) {
       void entryGet(entryId).then((res) => {
-        const e = res as { data: EntryFormValue; aliases: string[]; source: SourceRef | null; notes: string | null };
+        const e = unwrap<{ data: EntryFormValue; aliases: string[]; source: SourceRef | null; notes: string | null }>(res);
         setValue(e.data);
         setAliases(e.aliases);
         setSource(e.source);
@@ -79,15 +87,17 @@ export function EntryForm({ kbId, entryId, initialCapture, onSaved, onCancel }: 
           source: source ? source : null,
           notes: notes || null,
         });
-        onSaved((updated as { id: string }).id);
+        onSaved(unwrap<{ id: string }>(updated).id);
       } else {
-        const res = (await entryCreate({
-          kb_id: kbId,
-          data: value,
-          aliases,
-          source,
-          notes: notes || null,
-        })) as { entry: { id: string }; warning: { existing_entry_id: string } | null };
+        const res = unwrap<{ entry: { id: string }; warning: { existing_entry_id: string } | null }>(
+          await entryCreate({
+            kb_id: kbId,
+            data: value,
+            aliases,
+            source,
+            notes: notes || null,
+          }),
+        );
         if (res.warning) {
           push({
             title: "Possible duplicate",

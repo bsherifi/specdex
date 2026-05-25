@@ -23,6 +23,14 @@ interface AppSettings {
   tantivy_version: string;
 }
 
+// Commands return the tauri-specta `{ status, data | error }` wrapper (see the
+// contract note in `@/lib/tauri`); narrow on `status` rather than casting past it.
+function unwrap<T>(res: unknown): T {
+  const r = res as { status: "ok"; data: T } | { status: "error"; error: unknown };
+  if (r.status === "error") throw new Error(JSON.stringify(r.error));
+  return r.data;
+}
+
 export default function Settings(): JSX.Element {
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [identityName, setIdentityName] = useState("");
@@ -32,7 +40,7 @@ export default function Settings(): JSX.Element {
   const reload = async () => {
     const s = (await getAppSettings()) as unknown as AppSettings;
     setSettings(s);
-    const id = (await identityGet()) as null | { display_name: string };
+    const id = unwrap<{ display_name: string } | null>(await identityGet());
     if (id) {
       setIdentityName(id.display_name);
       setDraft(id.display_name);
