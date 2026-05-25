@@ -32,7 +32,7 @@ Status values: `pending` | `done` | `blocked`. Only the loop edits these.
 - [x] 16 core-scanner-aho-corasick     status=done     prereqs=(10,11,12,13,14,15)
 - [x] 17 core-tantivy-indexes          status=done     prereqs=(10,11,12,13,14,15)
 - [x] 20 adapter-commands              status=done     prereqs=(04,10,11,12,13,14,15,16,17)
-- [ ] 21 frontend-router-and-state     status=pending  prereqs=(03,04,20)
+- [x] 21 frontend-router-and-state     status=done     prereqs=(03,04,20)
 - [ ] 23 frontend-documents-route      status=pending  prereqs=(03,20,21)
 - [ ] 25 frontend-kb-routes            status=pending  prereqs=(03,20,21)
 - [ ] 22 frontend-search-route         status=pending  prereqs=(03,17,20,21,25)
