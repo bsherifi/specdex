@@ -113,7 +113,7 @@ export default function Onboarding(): JSX.Element {
 
         {step === 3 && (
           <>
-            <h2 className="text-lg font-semibold">You're ready</h2>
+            <h2 className="text-lg font-semibold">You&apos;re ready</h2>
             <p className="text-muted-foreground">
               Drag PDFs onto the app to start scanning. New codes auto-highlight as you add
               entries.

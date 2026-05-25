@@ -2,6 +2,7 @@ import type { JSX } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { Search, FileText, Database, Settings as SettingsIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useFirstRunRedirect } from "@/hooks/useFirstRunRedirect";
 
 const NAV = [
   { to: "/", label: "Search", icon: Search },
@@ -11,6 +12,7 @@ const NAV = [
 ] as const;
 
 export function Layout(): JSX.Element {
+  useFirstRunRedirect();
   const loc = useLocation();
   // Hide chrome on onboarding + design showcase.
   const minimal = loc.pathname.startsWith("/onboarding") || loc.pathname.startsWith("/__design");

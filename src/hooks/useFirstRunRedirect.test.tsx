@@ -8,9 +8,11 @@ vi.mock("react-router-dom", async () => {
   return { ...actual, useNavigate: () => navigateSpy };
 });
 
+// Tauri commands return the `{ status, data }` wrapper for Result-typed
+// commands; mock that shape so the hook exercises real production behavior.
 vi.mock("@/lib/tauri", () => ({
-  identityGet: vi.fn(async () => null),
-  kbListSummaries: vi.fn(async () => []),
+  identityGet: vi.fn(async () => ({ status: "ok", data: null })),
+  kbListSummaries: vi.fn(async () => ({ status: "ok", data: [] })),
 }));
 
 import { useFirstRunRedirect } from "./useFirstRunRedirect";

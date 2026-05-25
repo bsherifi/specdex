@@ -9,6 +9,9 @@ vi.mock("@tauri-apps/api/event", () => ({
 // The Search route (rendered at "/") calls kbListSummaries on mount. Stub the
 // tauri surface so the integration render exercises routing, not the bridge.
 vi.mock("@/lib/tauri", () => ({
+  // A returning user (non-null identity) so useFirstRunRedirect stays put and
+  // the Search route renders instead of bouncing to /onboarding.
+  identityGet: vi.fn(async () => ({ status: "ok", data: { display_name: "Tester" } })),
   kbListSummaries: vi.fn(async () => ({ status: "ok", data: [] })),
   searchEntries: vi.fn(async () => ({ status: "ok", data: [] })),
   searchSourceDocs: vi.fn(async () => ({ status: "ok", data: [] })),
