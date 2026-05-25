@@ -2,6 +2,7 @@ import type { JSX } from "react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/shared";
 import { TEMPLATES, type KbTemplate } from "@/dev/templates";
 import type { KbColorName } from "@/lib/theme";
@@ -19,8 +20,6 @@ export default function Onboarding(): JSX.Element {
   const navigate = useNavigate();
 
   // The fields above become useful in Tasks 4–6; suppress unused-warning until then.
-  void name;
-  void setName;
   void chosenTpl;
   void setChosenTpl;
   void kbName;
@@ -48,6 +47,20 @@ export default function Onboarding(): JSX.Element {
               when you drop new documents.
             </p>
             <Button onClick={() => setStep(1)}>Next</Button>
+          </>
+        )}
+
+        {step === 1 && (
+          <>
+            <h2 className="text-lg font-semibold">What should we show as your name on entries you create?</h2>
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Sara Chen" autoFocus />
+            <p className="text-xs text-muted-foreground">
+              No password, no email — just attribution stamped on entries you edit.
+            </p>
+            <div className="flex justify-between">
+              <Button variant="outline" onClick={() => setStep(0)}>Back</Button>
+              <Button onClick={() => setStep(2)} disabled={!name.trim()}>Next</Button>
+            </div>
           </>
         )}
       </div>

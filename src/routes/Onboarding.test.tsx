@@ -28,3 +28,15 @@ describe("Onboarding — Welcome step", () => {
     expect(screen.getByRole("button", { name: "Next" })).toBeInTheDocument();
   });
 });
+
+describe("Onboarding — Identity step", () => {
+  it("enables Next only after a non-empty name is typed", () => {
+    renderOnboarding();
+    fireEvent.click(screen.getByRole("button", { name: "Next" })); // 0 → 1
+    expect(screen.getByPlaceholderText(/Sara Chen/i)).toBeInTheDocument();
+    const next = screen.getByRole("button", { name: "Next" });
+    expect(next).toBeDisabled();
+    fireEvent.change(screen.getByPlaceholderText(/Sara Chen/i), { target: { value: "Sara" } });
+    expect(next).not.toBeDisabled();
+  });
+});
