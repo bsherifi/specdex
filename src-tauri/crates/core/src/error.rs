@@ -50,6 +50,12 @@ impl From<serde_json::Error> for CoreError {
     }
 }
 
+impl From<zip::result::ZipError> for CoreError {
+    fn from(e: zip::result::ZipError) -> Self {
+        Self::Internal(e.to_string())
+    }
+}
+
 impl From<rusqlite::Error> for CoreError {
     fn from(e: rusqlite::Error) -> Self {
         match &e {
