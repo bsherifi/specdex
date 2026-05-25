@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { JSX, ReactNode } from "react";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
+import { cn } from "@/lib/utils";
 
 interface FileDropZoneProps {
   onFiles: (paths: string[]) => void;
@@ -31,11 +32,11 @@ export function FileDropZone({ onFiles, children, className }: FileDropZoneProps
 
   return (
     <div
-      className={className}
+      className={cn(
+        "rounded-xl transition-shadow data-[drop-over=true]:ring-2 data-[drop-over=true]:ring-ring data-[drop-over=true]:ring-offset-2 data-[drop-over=true]:ring-offset-background",
+        className,
+      )}
       data-drop-over={isOver}
-      style={{
-        outline: isOver ? "2px dashed var(--ring)" : undefined,
-      }}
     >
       {children}
     </div>

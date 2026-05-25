@@ -3,6 +3,7 @@ import { Fragment } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { useFirstRunRedirect } from "@/hooks/useFirstRunRedirect";
 import { AppSidebar } from "@/components/AppSidebar";
+import { CommandPalette } from "@/components/CommandPalette";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   SidebarInset,
@@ -101,6 +102,7 @@ export function Layout(): JSX.Element {
 
   return (
     <SidebarProvider>
+      <CommandPalette />
       <AppSidebar />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 border-b border-border px-4">

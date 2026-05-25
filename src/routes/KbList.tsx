@@ -1,7 +1,8 @@
 import { useEffect, useState, type JSX } from "react";
-import { Link } from "react-router-dom";
-import { Plus } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Database, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/shared";
 import { KbCreateDialog } from "@/components/KbCreateDialog";
 import { kbListSummaries, unwrap } from "@/lib/tauri";
@@ -18,16 +19,28 @@ interface KbSummary {
 
 export default function KbList(): JSX.Element {
   const [kbs, setKbs] = useState<KbSummary[]>([]);
+  const [loading, setLoading] = useState(true);
   const [dialog, setDialog] = useState(false);
   const staleCounter = useStore((s) => s.kbsStaleCounter);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const reload = async () => {
     setKbs(unwrap<KbSummary[]>(await kbListSummaries()));
+    setLoading(false);
   };
 
   useEffect(() => {
     void reload();
   }, [staleCounter]);
+
+  // The Cmd+K palette's "New knowledge base" action routes here with this flag.
+  useEffect(() => {
+    if ((location.state as { create?: boolean } | null)?.create) {
+      setDialog(true);
+      navigate(location.pathname, { replace: true, state: null });
+    }
+  }, [location, navigate]);
 
   return (
     <div>
@@ -38,8 +51,22 @@ export default function KbList(): JSX.Element {
         </Button>
       </div>
 
-      {kbs.length === 0 ? (
+      {loading ? (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="rounded-lg border border-border bg-card p-4">
+              <div className="flex items-start justify-between">
+                <Skeleton className="h-5 w-28" />
+                <Skeleton className="size-4 rounded-full" />
+              </div>
+              <Skeleton className="mt-2 h-4 w-40" />
+              <Skeleton className="mt-3 h-3 w-24" />
+            </div>
+          ))}
+        </div>
+      ) : kbs.length === 0 ? (
         <EmptyState
+          icon={<Database />}
           title="No knowledge bases yet"
           description="Create your first KB to start ingesting documents."
           action={<Button onClick={() => setDialog(true)}>Create KB</Button>}

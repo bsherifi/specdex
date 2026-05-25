@@ -3,6 +3,7 @@ import type { JSX } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState, KbBadge } from "@/components/shared";
 import { useDebounce } from "@/hooks/useDebounce";
 import { searchEntries, searchSourceDocs, kbListSummaries, unwrap } from "@/lib/tauri";
@@ -65,6 +66,7 @@ export default function Search(): JSX.Element {
   const [docHits, setDocHits] = useState<SourceDocHit[]>([]);
   const [kbs, setKbs] = useState<KbSummary[]>([]);
   const [active, setActive] = useState(0);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -89,18 +91,28 @@ export default function Search(): JSX.Element {
     if (!debounced.trim()) {
       setEntryHits([]);
       setDocHits([]);
+      setLoading(false);
       return;
     }
+    setLoading(true);
     if (tab === "entries") {
-      void searchEntries(debounced, LIMIT).then((r) =>
-        setEntryHits(unwrap<EntryHit[]>(r)),
-      );
+      void searchEntries(debounced, LIMIT)
+        .then((r) => setEntryHits(unwrap<EntryHit[]>(r)))
+        .finally(() => setLoading(false));
     } else {
-      void searchSourceDocs(debounced, LIMIT).then((r) =>
-        setDocHits(unwrap<SourceDocHit[]>(r)),
-      );
+      void searchSourceDocs(debounced, LIMIT)
+        .then((r) => setDocHits(unwrap<SourceDocHit[]>(r)))
+        .finally(() => setLoading(false));
     }
   }, [debounced, tab]);
+
+  const skeletonRows = (
+    <div className="mt-3 flex flex-col gap-1">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <Skeleton key={i} className="h-[58px] w-full" />
+      ))}
+    </div>
+  );
 
   const results = tab === "entries" ? entryHits : docHits;
   const hasNoKbs = kbs.length === 0;
@@ -157,6 +169,8 @@ export default function Search(): JSX.Element {
               description="Specdex needs at least one KB before search can return results."
               action={<Link to="/onboarding" className="underline">Run onboarding</Link>}
             />
+          ) : loading ? (
+            skeletonRows
           ) : entryHits.length === 0 ? (
             <EmptyState title="No matches" description="Check spelling, or scan a new document." />
           ) : (
@@ -181,7 +195,9 @@ export default function Search(): JSX.Element {
         </TabsContent>
 
         <TabsContent value="docs">
-          {docHits.length === 0 ? (
+          {loading ? (
+            skeletonRows
+          ) : docHits.length === 0 ? (
             <EmptyState title="No matches" description="Try a different query or ingest more PDFs." />
           ) : (
             <div onKeyDown={onKeyOnList} tabIndex={0} className="mt-3 flex flex-col gap-2">

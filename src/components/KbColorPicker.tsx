@@ -15,9 +15,10 @@ export function KbColorPicker({ value, onChange }: Props): JSX.Element {
           key={name}
           type="button"
           onClick={() => onChange(name)}
+          aria-pressed={value === name}
           className={cn(
-            "h-7 w-7 rounded-full border-2 transition-all",
-            value === name ? "border-foreground" : "border-transparent",
+            "size-7 rounded-full outline-none ring-offset-2 ring-offset-background transition-all focus-visible:ring-2 focus-visible:ring-ring",
+            value === name && "ring-2 ring-foreground",
           )}
           style={{ backgroundColor: KB_COLOR_HEX[name] }}
           aria-label={`Pick color ${name}`}

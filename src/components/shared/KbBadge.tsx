@@ -15,8 +15,8 @@ export function KbBadge({ name, color, className }: KbBadgeProps): JSX.Element {
     <span
       data-kb-color={color}
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-medium",
-        "border border-border bg-muted text-foreground",
+        "inline-flex w-fit items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-medium",
+        "border border-border/60 bg-muted/50 text-foreground",
         className,
       )}
     >

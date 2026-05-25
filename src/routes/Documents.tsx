@@ -14,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { EmptyState, ConfirmModal } from "@/components/shared";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { FileDropZone } from "@/components/FileDropZone";
 import { useStore } from "@/lib/store";
@@ -31,6 +32,7 @@ type SortKey = "filename" | "page_count" | "ingested_at";
 
 export default function Documents(): JSX.Element {
   const [docs, setDocs] = useState<DocRow[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("ingested_at");
   const [sortAsc, setSortAsc] = useState(false);
@@ -42,6 +44,7 @@ export default function Documents(): JSX.Element {
 
   const reload = useCallback(async () => {
     setDocs(unwrap<DocRow[]>(await sourceDocListRecent(500)));
+    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -135,8 +138,15 @@ export default function Documents(): JSX.Element {
         </div>
       </div>
 
-      {filtered.length === 0 ? (
+      {loading ? (
+        <div className="mt-4 flex flex-col gap-2">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-10 w-full" />
+          ))}
+        </div>
+      ) : filtered.length === 0 ? (
         <EmptyState
+          icon={<Upload />}
           title={docs.length === 0 ? "Drop PDFs here, or browse." : "No documents match this filter."}
           {...(docs.length === 0 ? { description: "Up to 50 files per batch." } : {})}
           action={docs.length === 0 ? <Button onClick={() => void browse()}>Browse PDFs</Button> : undefined}

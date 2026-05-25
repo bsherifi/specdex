@@ -11,6 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EmptyState, KbBadge, ConfirmModal } from "@/components/shared";
 import { toast } from "sonner";
@@ -77,7 +78,18 @@ export default function KbDetail(): JSX.Element {
     );
   }, [id, filter, staleForKb]);
 
-  if (!kb || !id) return <div>Loading…</div>;
+  if (!kb || !id)
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-9 w-full max-w-sm" />
+        <div className="flex flex-col gap-2">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Skeleton key={i} className="h-10 w-full" />
+          ))}
+        </div>
+      </div>
+    );
 
   const columns: FieldDef[] = [
     kb.schema.fields.find((f) => f.primary)!,
