@@ -7,7 +7,7 @@
  * One neutral palette (OKLCH, chroma 0 on every surface token); color carries
  * meaning only. `destructive` is the single chromatic base token; the locked
  * 8-color KB highlight palette lives in `--color-kb-*` below (mirror of
- * src/lib/kb-colors.ts — keep in sync). See docs/DESIGN-SYSTEM.md.
+ * src/lib/kb-colors.ts — keep in sync).
  */
 
 /* Class-based dark mode (next-themes toggles `.dark` on <html>). */

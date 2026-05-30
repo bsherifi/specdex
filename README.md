@@ -4,10 +4,6 @@
 PDFs go in; highlighted, source-backed entries come out. Fully offline,
 single signed binary per OS, MIT-licensed.
 
-![Specdex viewer with highlighted codes](docs/screenshots/viewer.png)
-
-[Watch a 90-second demo →](docs/screencast.mp4)
-
 ## Why Specdex
 
 Specs and codes — `BAC3082`, `AMS-C-5541`, internal part numbers — live

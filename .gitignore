@@ -41,6 +41,9 @@ src-tauri/binaries/*
 # Third-party reference repo kept locally for inspiration — never published
 customiser-frontend-repo-inspo/
 
+# Internal docs / design notes — kept local, not published
+docs/
+
 # Editor / OS
 .DS_Store
 *.log
