@@ -103,8 +103,9 @@ export function EntryForm({ kbId, entryId, initialCapture, onSaved, onCancel }: 
   };
 
   return (
-    <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-      <div className="space-y-3 lg:col-span-2">
+    <div className="@container">
+      <div className="grid grid-cols-1 gap-4 @2xl:grid-cols-3">
+      <div className="space-y-3 @2xl:col-span-2">
         {schema.fields.map((f) => (
           <FieldByType
             key={f.name}
@@ -134,9 +135,10 @@ export function EntryForm({ kbId, entryId, initialCapture, onSaved, onCancel }: 
           <SourceBackrefPanel source={source} />
         </section>
       </aside>
-      <div className="lg:col-span-3 flex justify-end gap-2">
+      <div className="flex justify-end gap-2 @2xl:col-span-3">
         <Button variant="outline" onClick={onCancel}>Cancel</Button>
         <Button onClick={() => void save()} disabled={errors.length > 0}>Save</Button>
+      </div>
       </div>
     </div>
   );

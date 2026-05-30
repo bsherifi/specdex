@@ -109,6 +109,10 @@ export const sourceDocDelete = pick("sourceDocDelete") as (
 export const sourceDocResolvePath = pick("sourceDocResolvePath") as (
   id: string,
 ) => Promise<unknown>;
+export const findInDocument = pick("findInDocument") as (
+  id: string,
+  query: string,
+) => Promise<unknown>;
 
 /* --- Scanner --- */
 export const scanDocument = pick("scanDocument") as (

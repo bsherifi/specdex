@@ -38,6 +38,9 @@ src-tauri/gen/
 src-tauri/binaries/*
 !src-tauri/binaries/.gitkeep
 
+# Third-party reference repo kept locally for inspiration — never published
+customiser-frontend-repo-inspo/
+
 # Editor / OS
 .DS_Store
 *.log

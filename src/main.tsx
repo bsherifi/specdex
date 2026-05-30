@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { ThemeProvider } from "next-themes";
 import "@fontsource-variable/geist";
 import { App } from "./App";
+import "pdfjs-dist/web/pdf_viewer.css";
 import "./styles/globals.css";
 
 const rootEl = document.getElementById("root");

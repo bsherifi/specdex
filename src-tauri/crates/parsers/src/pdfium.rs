@@ -14,6 +14,7 @@
 #![allow(clippy::cast_possible_truncation)]
 
 use std::path::Path;
+use std::sync::Arc;
 
 use pdfium_render::prelude::*;
 
@@ -23,24 +24,41 @@ use crate::error::{ParseError, Result};
 use crate::parsed_document::{ParseOptions, ParsedDocument};
 use crate::parser_trait::DocumentParser;
 
+/// Bind pdfium and initialize the library exactly once, returning a shareable
+/// handle.
+///
+/// pdfium — and pdfium-render's global thread marshall — is a process-wide
+/// singleton. Constructing two `Pdfium` instances calls `FPDF_InitLibrary`
+/// twice and the second call deadlocks on the marshall mutex held by the
+/// first. Every pdfium-backed parser in the process MUST share one handle, so
+/// callers bind once here and clone the `Arc` into each parser.
+pub fn bind_pdfium(library_path: Option<&Path>) -> Result<Arc<Pdfium>> {
+    let bindings = match library_path {
+        Some(p) => Pdfium::bind_to_library(p),
+        None => match std::env::var("SPECDEX_PDFIUM_PATH") {
+            Ok(p) => Pdfium::bind_to_library(p),
+            Err(_) => Pdfium::bind_to_system_library(),
+        },
+    }
+    .or_else(|_| Pdfium::bind_to_system_library())
+    .map_err(|e| ParseError::PdfiumNotAvailable(e.to_string()))?;
+    Ok(Arc::new(Pdfium::new(bindings)))
+}
+
 pub struct PdfiumParser {
-    pdfium: Pdfium,
+    pdfium: Arc<Pdfium>,
 }
 
 impl PdfiumParser {
     pub fn new(library_path: Option<&Path>) -> Result<Self> {
-        let bindings = match library_path {
-            Some(p) => Pdfium::bind_to_library(p),
-            None => match std::env::var("SPECDEX_PDFIUM_PATH") {
-                Ok(p) => Pdfium::bind_to_library(p),
-                Err(_) => Pdfium::bind_to_system_library(),
-            },
-        }
-        .or_else(|_| Pdfium::bind_to_system_library())
-        .map_err(|e| ParseError::PdfiumNotAvailable(e.to_string()))?;
-        Ok(Self {
-            pdfium: Pdfium::new(bindings),
-        })
+        Ok(Self::with_shared(bind_pdfium(library_path)?))
+    }
+
+    /// Build a parser from an already-initialized, shared pdfium handle. Use
+    /// this (not `new`) when the process also constructs an [`crate::ocr::OcrParser`]
+    /// so both share one `Pdfium` (see [`bind_pdfium`]).
+    pub fn with_shared(pdfium: Arc<Pdfium>) -> Self {
+        Self { pdfium }
     }
 }
 

@@ -41,6 +41,7 @@ pub fn builder() -> Builder<Wry> {
             ingest::source_doc_list_recent,
             source_doc::source_doc_delete,
             source_doc::source_doc_resolve_path,
+            source_doc::find_in_document,
             scanner::scan_document,
             scanner::scanner_invalidate,
             search::search_entries,
@@ -55,13 +56,10 @@ pub fn builder() -> Builder<Wry> {
 
 /// Returns the on-disk path that bindings should be written to.
 ///
-/// Anchored to `CARGO_MANIFEST_DIR` so it works regardless of where Cargo
-/// was invoked. `crates/tauri_adapter` -> `crates` -> `src-tauri` -> repo
-/// root -> `src/lib/bindings.ts`.
+/// Anchored to `CARGO_MANIFEST_DIR` (the adapter crate at `<repo>/src-tauri`),
+/// so one `..` reaches the repo root -> `src/lib/bindings.ts`.
 pub fn bindings_path() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("..")
-        .join("..")
         .join("..")
         .join("src")
         .join("lib")

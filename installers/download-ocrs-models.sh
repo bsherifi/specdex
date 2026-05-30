@@ -12,16 +12,21 @@ mkdir -p "${DEST}"
 BASE_URL="https://ocrs-models.s3-accelerate.amazonaws.com"
 DETECTION_FILE="text-detection.rten"
 RECOGNITION_FILE="text-recognition.rten"
-# Replace with the actual sha256 digests at edit time (see ocrs README).
-DETECTION_SHA256="REPLACE_WITH_PINNED_SHA256"
-RECOGNITION_SHA256="REPLACE_WITH_PINNED_SHA256"
+DETECTION_SHA256="f15cfb56bd02c4bf478a20343986504a1f01e1665c2b3a0ad66340f054b1b5ca"
+RECOGNITION_SHA256="e484866d4cce403175bd8d00b128feb08ab42e208de30e42cd9889d8f1735a6e"
 
 download_and_verify() {
   local name="$1"
   local expected_sha="$2"
   local out="${DEST}/${name}"
-  if [ ! -f "${out}" ]; then
-    curl -L "${BASE_URL}/${name}" -o "${out}"
+  # Re-download when the file is missing OR empty (a failed earlier run can
+  # leave a 0-byte stub that the app then mistakes for a present model).
+  if [ ! -s "${out}" ]; then
+    curl -fL "${BASE_URL}/${name}" -o "${out}"
+  fi
+  if [ ! -s "${out}" ]; then
+    echo "download produced an empty file for ${name}" >&2
+    exit 1
   fi
   if [ "${expected_sha}" != "REPLACE_WITH_PINNED_SHA256" ]; then
     actual=$(shasum -a 256 "${out}" | awk '{print $1}')

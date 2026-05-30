@@ -186,6 +186,17 @@ async sourceDocResolvePath(sourceDocId: SourceDocId) : Promise<Result<string, Co
     else return { status: "error", error: e  as any };
 }
 },
+/**
+ * Literal (ASCII-case-insensitive) find-in-document. Powers the viewer's ⌘F.
+ */
+async findInDocument(sourceDocId: SourceDocId, query: string) : Promise<Result<FindMatch[], CoreError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("find_in_document", { sourceDocId, query }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async scanDocument(sourceDocId: SourceDocId, scope: ScanScope) : Promise<Result<Match[], CoreError>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("scan_document", { sourceDocId, scope }) };
@@ -302,6 +313,15 @@ _renamed_from?: string | null }
  * `entry_link` is intentionally absent — deferred to v1.1 per §11.3.
  */
 export type FieldType = { kind: "text" } | { kind: "text_multiline" } | { kind: "number" } | { kind: "date" } | { kind: "select"; options: string[] } | { kind: "url" } | { kind: "image_attachment" }
+/**
+ * A literal substring hit inside a document's parsed text, page-located via
+ * the offset→span resolver. Powers find-in-document (⌘F) in the viewer.
+ */
+export type FindMatch = { page: number; bbox: BBox; 
+/**
+ * A short surrounding snippet for the find bar (form-feeds flattened).
+ */
+context: string; start_offset: number; end_offset: number }
 export type Identity = { display_name: string; created_at: string }
 export type IdentityValidationError = { code: "Empty" } | { code: "TooLong" }
 export type IngestFile = { path: string; ocr: boolean }

@@ -25,3 +25,12 @@ export interface SelectionCapture {
   page: number;
   bbox: { x: number; y: number; w: number; h: number };
 }
+
+/** Mirrors core `FindMatch` — a literal find-in-document hit. */
+export interface FindMatch {
+  page: number;
+  bbox: { x: number; y: number; w: number; h: number };
+  context: string;
+  start_offset: number;
+  end_offset: number;
+}

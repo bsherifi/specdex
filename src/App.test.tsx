@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { App } from "./App";
+import { useStore } from "@/lib/store";
 
 vi.mock("@tauri-apps/api/event", () => ({
   listen: async () => () => {},
@@ -28,5 +29,19 @@ describe("App", () => {
     // The "Search" label also appears in the sidebar nav, so assert on the
     // search input's unique placeholder to confirm the route itself rendered.
     expect(await screen.findByPlaceholderText(/Search entries/i)).toBeInTheDocument();
+  });
+
+  // Regression: a completed ingest job renders a <Link> in the queue panel.
+  // The panel must live inside the RouterProvider, or the <Link> throws
+  // "Right side of assignment cannot be destructured" and white-screens the app.
+  it("renders a completed ingest job's link without crashing", async () => {
+    useStore.setState({
+      ingestJobs: [
+        { jobId: "j1", filename: "spec.pdf", progress: 1, state: "done", sourceDocId: "doc-1" },
+      ],
+    });
+    render(<App />);
+    expect(await screen.findByText("Open document")).toBeInTheDocument();
+    useStore.setState({ ingestJobs: [] });
   });
 });

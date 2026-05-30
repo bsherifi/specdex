@@ -1,4 +1,5 @@
 use specdex_core::models::ids::SourceDocId;
+use specdex_core::models::scan::FindMatch;
 use specdex_core::models::source_document::SourceDocument;
 use specdex_core::source_doc::SourceDocRepo;
 use specdex_core::CoreError;
@@ -42,4 +43,15 @@ pub fn source_doc_resolve_path(
         .join(&doc.stored_path)
         .to_string_lossy()
         .to_string())
+}
+
+/// Literal (ASCII-case-insensitive) find-in-document. Powers the viewer's ⌘F.
+#[tauri::command]
+#[specta::specta]
+pub fn find_in_document(
+    state: tauri::State<'_, AppState>,
+    source_doc_id: SourceDocId,
+    query: String,
+) -> Result<Vec<FindMatch>, CoreError> {
+    SourceDocRepo::new(&state.db).find_in_document(source_doc_id, &query)
 }

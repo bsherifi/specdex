@@ -24,7 +24,7 @@ pub use parsed_document::{ParseOptions, ParsedDocument};
 pub use parser_trait::DocumentParser;
 
 #[cfg(feature = "pdfium")]
-pub use pdfium::PdfiumParser;
+pub use pdfium::{bind_pdfium, PdfiumParser};
 
 #[cfg(feature = "ocr")]
 pub use ocr::OcrParser;

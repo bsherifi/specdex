@@ -5,6 +5,7 @@ import { useFirstRunRedirect } from "@/hooks/useFirstRunRedirect";
 import { AppSidebar } from "@/components/AppSidebar";
 import { CommandPalette } from "@/components/CommandPalette";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { IngestQueuePanel, PreIngestDialog } from "@/components/IngestQueue";
 import {
   SidebarInset,
   SidebarProvider,
@@ -94,35 +95,43 @@ export function Layout(): JSX.Element {
 
   if (minimal) {
     return (
-      <div className="h-svh overflow-auto">
-        <Outlet />
-      </div>
+      <>
+        <div className="h-svh overflow-auto">
+          <Outlet />
+        </div>
+        <PreIngestDialog />
+        <IngestQueuePanel />
+      </>
     );
   }
 
   return (
-    <SidebarProvider>
-      <CommandPalette />
-      <AppSidebar />
-      <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b border-border px-4">
-          <SidebarTrigger className="-ml-1" />
-          <Separator
-            orientation="vertical"
-            className="mr-2 data-[orientation=vertical]:h-4"
-          />
-          <Breadcrumbs pathname={loc.pathname} />
-          <div className="ml-auto flex items-center gap-2">
-            <ThemeToggle />
+    <>
+      <SidebarProvider>
+        <CommandPalette />
+        <AppSidebar />
+        <SidebarInset>
+          <header className="flex h-16 shrink-0 items-center gap-2 border-b border-border px-4">
+            <SidebarTrigger className="-ml-1" />
+            <Separator
+              orientation="vertical"
+              className="mr-2 data-[orientation=vertical]:h-4"
+            />
+            <Breadcrumbs pathname={loc.pathname} />
+            <div className="ml-auto flex items-center gap-2">
+              <ThemeToggle />
+            </div>
+          </header>
+          <div
+            key={loc.pathname}
+            className="page-enter flex min-h-0 flex-1 flex-col gap-3 overflow-auto p-4"
+          >
+            <Outlet />
           </div>
-        </header>
-        <div
-          key={loc.pathname}
-          className="page-enter flex min-h-0 flex-1 flex-col gap-3 overflow-auto p-4"
-        >
-          <Outlet />
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
+        </SidebarInset>
+      </SidebarProvider>
+      <PreIngestDialog />
+      <IngestQueuePanel />
+    </>
   );
 }

@@ -99,6 +99,69 @@ impl<'db> SourceDocRepo<'db> {
         })
     }
 
+    /// Find every literal occurrence of `query` in the document's parsed text
+    /// and locate each on the page. ASCII-case-insensitive and byte-offset
+    /// preserving (so offsets stay aligned with `parsed_spans`); deterministic,
+    /// no fuzzy matching (§4 trust contract).
+    pub fn find_in_document(
+        &self,
+        source_doc_id: SourceDocId,
+        query: &str,
+    ) -> Result<Vec<crate::models::scan::FindMatch>> {
+        use crate::models::scan::FindMatch;
+        let q = query.trim();
+        if q.is_empty() {
+            return Ok(Vec::new());
+        }
+        let doc = self.get(source_doc_id)?;
+        let text = &doc.parsed_text;
+        let hay = text.as_bytes();
+        let needle = q.as_bytes();
+        if needle.len() > hay.len() {
+            return Ok(Vec::new());
+        }
+        // Char-boundary clamps so context slicing never splits a UTF-8 char.
+        let back = |mut i: usize| {
+            while i > 0 && !text.is_char_boundary(i) {
+                i -= 1;
+            }
+            i
+        };
+        let fwd = |mut i: usize| {
+            while i < text.len() && !text.is_char_boundary(i) {
+                i += 1;
+            }
+            i
+        };
+
+        let mut out = Vec::new();
+        let mut from = 0usize;
+        while from + needle.len() <= hay.len() {
+            match hay[from..]
+                .windows(needle.len())
+                .position(|w| w.eq_ignore_ascii_case(needle))
+            {
+                Some(rel) => {
+                    let start = from + rel;
+                    let end = start + needle.len();
+                    let (page, bbox) = crate::scanner::resolve_location(&doc, start, end);
+                    let cs = back(start.saturating_sub(24));
+                    let ce = fwd((end + 24).min(text.len()));
+                    out.push(FindMatch {
+                        page,
+                        bbox,
+                        context: text[cs..ce].replace('\u{000C}', " "),
+                        start_offset: start,
+                        end_offset: end,
+                    });
+                    from = end;
+                }
+                None => break,
+            }
+        }
+        Ok(out)
+    }
+
     pub fn delete(&self, id: SourceDocId) -> Result<()> {
         self.db.with_mut(|conn| {
             let affected = conn.execute(
@@ -190,6 +253,51 @@ mod tests {
         let fetched = repo.find(id).unwrap().unwrap();
         assert_eq!(fetched.page_count, 3);
         assert_eq!(fetched.parsed_spans.len(), 1);
+    }
+
+    fn span(start: usize, end: usize, page: u32, y: f32) -> TextSpan {
+        TextSpan {
+            start_offset: start,
+            end_offset: end,
+            page,
+            bbox: BBox::new(0.0, y, 100.0, 12.0),
+        }
+    }
+
+    fn insert_text(repo: &SourceDocRepo, text: &str, spans: Vec<TextSpan>) -> SourceDocument {
+        repo.insert(InsertSourceDoc {
+            id: SourceDocId::new(),
+            filename: "d.pdf".into(),
+            stored_path: "docs/d.pdf".into(),
+            content_sha256: "0".repeat(64),
+            mime_type: "application/pdf".into(),
+            page_count: 2,
+            parsed_text: text.into(),
+            parsed_spans: spans,
+            ocr_used: false,
+            ingested_by: None,
+        })
+        .unwrap()
+    }
+
+    #[test]
+    fn find_in_document_locates_case_insensitive_substrings() {
+        let db = Db::open_memory().unwrap();
+        let repo = SourceDocRepo::new(&db);
+        // "Alpha BAC3082 beta" = bytes 0..18, form-feed at 18, page 2 at 19..38.
+        let text = "Alpha BAC3082 beta\u{000C}gamma bac3082 delta";
+        let doc = insert_text(&repo, text, vec![span(0, 18, 1, 10.0), span(19, 38, 2, 20.0)]);
+
+        let hits = repo.find_in_document(doc.id, "bac3082").unwrap();
+        assert_eq!(hits.len(), 2, "matches both cases");
+        assert_eq!(hits[0].page, 1);
+        assert_eq!(hits[1].page, 2);
+        assert_eq!((hits[0].start_offset, hits[0].end_offset), (6, 13));
+        assert!(hits[0].context.to_lowercase().contains("bac3082"));
+        assert!(!hits[0].context.contains('\u{000C}'), "form-feed flattened");
+
+        assert!(repo.find_in_document(doc.id, "nomatch").unwrap().is_empty());
+        assert!(repo.find_in_document(doc.id, "   ").unwrap().is_empty());
     }
 
     #[test]

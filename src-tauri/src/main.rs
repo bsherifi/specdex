@@ -53,13 +53,22 @@ fn pdfium_rel_path() -> &'static str {
     }
 }
 
+/// A path that exists and is a non-empty file. A 0-byte file (e.g. a failed
+/// download stub) must NOT count as a usable library: handing it to pdfium
+/// fails and silently degrades the whole app to `MockParser`.
+fn is_usable_file(p: &std::path::Path) -> bool {
+    std::fs::metadata(p)
+        .map(|m| m.is_file() && m.len() > 0)
+        .unwrap_or(false)
+}
+
 fn resolve_pdfium_path(app: &tauri::AppHandle) -> Option<PathBuf> {
     if let Ok(p) = std::env::var("SPECDEX_PDFIUM_PATH") {
         return Some(PathBuf::from(p));
     }
     if let Ok(resource_dir) = app.path().resource_dir() {
         let candidate = resource_dir.join("binaries").join(pdfium_rel_path());
-        if candidate.exists() {
+        if is_usable_file(&candidate) {
             return Some(candidate);
         }
     }
@@ -71,7 +80,7 @@ fn resolve_pdfium_path(app: &tauri::AppHandle) -> Option<PathBuf> {
         let candidate = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("binaries")
             .join(pdfium_rel_path());
-        if candidate.exists() {
+        if is_usable_file(&candidate) {
             return Some(candidate);
         }
     }
@@ -92,16 +101,20 @@ fn resolve_ocrs_model_paths(app: &tauri::AppHandle) -> (PathBuf, PathBuf) {
     }
     // Prefer the bundle's resource dir; in debug builds (`tauri dev`) that dir
     // isn't populated, so fall back to the in-repo `src-tauri/binaries/ocrs`.
+    let has_models = |d: &std::path::Path| {
+        is_usable_file(&d.join("text-detection.rten"))
+            && is_usable_file(&d.join("text-recognition.rten"))
+    };
     let bundled = app
         .path()
         .resource_dir()
         .ok()
         .map(|rd| rd.join("binaries").join("ocrs"))
-        .filter(|p| p.exists());
+        .filter(|p| has_models(p));
     #[cfg(debug_assertions)]
     let bundled = bundled.or_else(|| {
         Some(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("binaries").join("ocrs"))
-            .filter(|p| p.exists())
+            .filter(|p| has_models(p))
     });
     let det = env_det
         .or_else(|| bundled.as_ref().map(|p| p.join("text-detection.rten")))
@@ -144,22 +157,32 @@ fn main() {
             let search = Arc::new(Search::open(&app_data.tantivy())?);
 
             // Parsers — fall back to MockParser if real libraries are unavailable.
+            // pdfium is a process-wide singleton: bind it ONCE and share the
+            // handle with both the PDF and OCR parsers. Constructing two
+            // `Pdfium` instances deadlocks on pdfium-render's thread marshall.
             let pdfium_path = resolve_pdfium_path(app.handle());
-            let pdfium_parser: Arc<dyn DocumentParser> =
-                match PdfiumParser::new(pdfium_path.as_deref()) {
-                    Ok(p) => Arc::new(p),
+            let (pdfium_parser, ocr_parser): (Arc<dyn DocumentParser>, Arc<dyn DocumentParser>) =
+                match specdex_parsers::bind_pdfium(pdfium_path.as_deref()) {
+                    Ok(shared) => {
+                        let pdf: Arc<dyn DocumentParser> =
+                            Arc::new(PdfiumParser::with_shared(shared.clone()));
+                        let (ocrs_det, ocrs_rec) = resolve_ocrs_model_paths(app.handle());
+                        let ocr: Arc<dyn DocumentParser> =
+                            match OcrParser::with_shared(shared, &ocrs_det, &ocrs_rec) {
+                                Ok(p) => Arc::new(p),
+                                Err(e) => {
+                                    tracing::warn!(?e, "ocrs models unavailable; using permissive MockParser");
+                                    Arc::new(MockParser::permissive())
+                                }
+                            };
+                        (pdf, ocr)
+                    }
                     Err(e) => {
                         tracing::warn!(?e, "pdfium unavailable; using permissive MockParser");
-                        Arc::new(MockParser::permissive())
-                    }
-                };
-            let (ocrs_det, ocrs_rec) = resolve_ocrs_model_paths(app.handle());
-            let ocr_parser: Arc<dyn DocumentParser> =
-                match OcrParser::new(pdfium_path.as_deref(), &ocrs_det, &ocrs_rec) {
-                    Ok(p) => Arc::new(p),
-                    Err(e) => {
-                        tracing::warn!(?e, "ocrs models unavailable; using permissive MockParser");
-                        Arc::new(MockParser::permissive())
+                        (
+                            Arc::new(MockParser::permissive()),
+                            Arc::new(MockParser::permissive()),
+                        )
                     }
                 };
 

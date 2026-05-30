@@ -22,7 +22,9 @@ default = []
 # still build the trait. ocrs is pure Rust so the `ocr` feature only
 # gates the impl module (not any native deps).
 pdfium = ["dep:pdfium-render", "dep:image"]
-ocr = ["dep:ocrs", "dep:rten", "dep:image", "dep:pdfium-render"]
+# OCR rasterizes pages via pdfium and shares its single `Pdfium` handle, so it
+# requires the `pdfium` feature (which brings pdfium-render + image).
+ocr = ["pdfium", "dep:ocrs", "dep:rten"]
 real-parsers = ["pdfium", "ocr"]
 
 [dependencies]

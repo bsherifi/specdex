@@ -47,6 +47,18 @@ pub struct Match {
     pub bbox: BBox,
 }
 
+/// A literal substring hit inside a document's parsed text, page-located via
+/// the offset→span resolver. Powers find-in-document (⌘F) in the viewer.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Type)]
+pub struct FindMatch {
+    pub page: u32,
+    pub bbox: BBox,
+    /// A short surrounding snippet for the find bar (form-feeds flattened).
+    pub context: String,
+    pub start_offset: usize,
+    pub end_offset: usize,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

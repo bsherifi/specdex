@@ -25,10 +25,9 @@ export function PreIngestDialog(): JSX.Element {
 
   const start = async () => {
     try {
+      // No success toast: the Ingest queue panel already shows the queued files
+      // and their progress, so a toast would just stack a second popup on it.
       unwrap(await ingestFiles({ files: rows.map((r) => ({ path: r.path, ocr: r.ocr })) }));
-      toast.info("Ingest started", {
-        description: `${rows.length} file(s) queued.`,
-      });
     } catch (e) {
       toast.error("Ingest failed to start", { description: String(e) });
     }

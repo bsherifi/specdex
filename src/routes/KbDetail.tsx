@@ -1,5 +1,5 @@
 import { useEffect, useState, type JSX } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Edit, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -45,10 +45,20 @@ interface Entry {
   data: Record<string, unknown>;
   updated_at: string;
 }
+// A highlight captured in the PDF viewer, handed over via router state.
+interface SourceCapture {
+  source_doc_id: string;
+  page: number;
+  bbox: { x: number; y: number; w: number; h: number };
+  text: string;
+}
 
 export default function KbDetail(): JSX.Element {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [captureForEntry, setCaptureForEntry] = useState<SourceCapture | null>(null);
+  const [editEntryId, setEditEntryId] = useState<string | null>(null);
   const [kb, setKb] = useState<Kb | null>(null);
   const [entries, setEntries] = useState<Entry[]>([]);
   const [filter, setFilter] = useState("");
@@ -77,6 +87,21 @@ export default function KbDetail(): JSX.Element {
       setEntries(unwrap<Entry[]>(res)),
     );
   }, [id, filter, staleForKb]);
+
+  // A highlight handed over from the PDF viewer either opens the create form
+  // prefilled (text selection) or opens an existing entry (clicked highlight).
+  // Clear the router state afterwards so a refresh/back doesn't reopen it.
+  useEffect(() => {
+    const state = location.state as { capture?: SourceCapture; openEntryId?: string } | null;
+    if (state?.capture) {
+      setCaptureForEntry(state.capture);
+      setNewEntryOpen(true);
+      navigate(location.pathname, { replace: true, state: null });
+    } else if (state?.openEntryId) {
+      setEditEntryId(state.openEntryId);
+      navigate(location.pathname, { replace: true, state: null });
+    }
+  }, [location, navigate]);
 
   if (!kb || !id)
     return (
@@ -278,16 +303,45 @@ export default function KbDetail(): JSX.Element {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={newEntryOpen} onOpenChange={setNewEntryOpen}>
+      <Dialog
+        open={newEntryOpen}
+        onOpenChange={(o) => {
+          setNewEntryOpen(o);
+          if (!o) setCaptureForEntry(null);
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>New entry</DialogTitle>
           </DialogHeader>
           <EntryForm
             kbId={kb.id}
-            onSaved={() => setNewEntryOpen(false)}
-            onCancel={() => setNewEntryOpen(false)}
+            {...(captureForEntry ? { initialCapture: captureForEntry } : {})}
+            onSaved={() => {
+              setNewEntryOpen(false);
+              setCaptureForEntry(null);
+            }}
+            onCancel={() => {
+              setNewEntryOpen(false);
+              setCaptureForEntry(null);
+            }}
           />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={editEntryId !== null} onOpenChange={(o) => !o && setEditEntryId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit entry</DialogTitle>
+          </DialogHeader>
+          {editEntryId && (
+            <EntryForm
+              kbId={kb.id}
+              entryId={editEntryId}
+              onSaved={() => setEditEntryId(null)}
+              onCancel={() => setEditEntryId(null)}
+            />
+          )}
         </DialogContent>
       </Dialog>
 

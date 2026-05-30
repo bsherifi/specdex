@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { RouterProvider } from "react-router-dom";
 import { router } from "@/router";
 import { Toaster } from "@/components/ui/sonner";
-import { IngestQueuePanel, PreIngestDialog } from "@/components/IngestQueue";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { subscribeToSpecdexEvents } from "@/lib/events";
 
 export function App(): JSX.Element {
@@ -14,12 +14,13 @@ export function App(): JSX.Element {
     });
     return () => unlisten?.();
   }, []);
+  // NOTE: the ingest overlays (PreIngestDialog/IngestQueuePanel) render inside
+  // the router via Layout, not here — they use <Link>/navigate and would crash
+  // outside the RouterProvider context.
   return (
-    <>
+    <ErrorBoundary>
       <RouterProvider router={router} />
-      <PreIngestDialog />
-      <IngestQueuePanel />
       <Toaster richColors closeButton />
-    </>
+    </ErrorBoundary>
   );
 }

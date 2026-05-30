@@ -11,6 +11,7 @@
 #![allow(clippy::cast_precision_loss, clippy::cast_possible_truncation)]
 
 use std::path::Path;
+use std::sync::Arc;
 
 use image::DynamicImage;
 use ocrs::{ImageSource, OcrEngine, OcrEngineParams, TextItem};
@@ -22,9 +23,10 @@ use specdex_core::models::source_document::{BBox, TextSpan};
 use crate::error::{ParseError, Result};
 use crate::parsed_document::{ParseOptions, ParsedDocument};
 use crate::parser_trait::DocumentParser;
+use crate::pdfium::bind_pdfium;
 
 pub struct OcrParser {
-    pdfium: Pdfium,
+    pdfium: Arc<Pdfium>,
     engine: OcrEngine,
 }
 
@@ -37,12 +39,21 @@ impl OcrParser {
         detection_model_path: &Path,
         recognition_model_path: &Path,
     ) -> Result<Self> {
-        let bindings = match pdfium_library_path {
-            Some(p) => Pdfium::bind_to_library(p),
-            None => Pdfium::bind_to_system_library(),
-        }
-        .or_else(|_| Pdfium::bind_to_system_library())
-        .map_err(|e| ParseError::PdfiumNotAvailable(e.to_string()))?;
+        Self::with_shared(
+            bind_pdfium(pdfium_library_path)?,
+            detection_model_path,
+            recognition_model_path,
+        )
+    }
+
+    /// Build an OCR parser from an already-initialized, shared pdfium handle.
+    /// Every pdfium-backed parser in the process must share one handle (see
+    /// [`bind_pdfium`]); constructing a second `Pdfium` deadlocks.
+    pub fn with_shared(
+        pdfium: Arc<Pdfium>,
+        detection_model_path: &Path,
+        recognition_model_path: &Path,
+    ) -> Result<Self> {
         let detection = Model::load_file(detection_model_path)
             .map_err(|e| ParseError::OcrFailed(format!("detection model: {e}")))?;
         let recognition = Model::load_file(recognition_model_path)
@@ -53,10 +64,7 @@ impl OcrParser {
             ..Default::default()
         })
         .map_err(|e| ParseError::OcrFailed(e.to_string()))?;
-        Ok(Self {
-            pdfium: Pdfium::new(bindings),
-            engine,
-        })
+        Ok(Self { pdfium, engine })
     }
 }
 
@@ -165,5 +173,27 @@ mod tests {
             return;
         };
         let _p = OcrParser::new(None, std::path::Path::new(&det), std::path::Path::new(&rec));
+    }
+
+    /// Regression for the startup deadlock: the app holds a PDF parser AND an
+    /// OCR parser at once. Each must share ONE `Pdfium`; building a second one
+    /// deadlocks pdfium-render's global thread marshall. This builds both from a
+    /// single shared handle and must return promptly. Requires real binaries
+    /// (set `SPECDEX_PDFIUM_PATH` + the two model env vars).
+    #[test]
+    fn shared_pdfium_drives_pdf_and_ocr_parsers() {
+        let det = std::env::var("SPECDEX_OCRS_DETECTION_MODEL").ok();
+        let rec = std::env::var("SPECDEX_OCRS_RECOGNITION_MODEL").ok();
+        let (Some(det), Some(rec)) = (det, rec) else {
+            eprintln!("skipping: SPECDEX_OCRS_*_MODEL unset");
+            return;
+        };
+        let Ok(pdfium) = crate::pdfium::bind_pdfium(None) else {
+            eprintln!("skipping: pdfium unavailable");
+            return;
+        };
+        let _pdf = crate::pdfium::PdfiumParser::with_shared(Arc::clone(&pdfium));
+        let _ocr = OcrParser::with_shared(pdfium, Path::new(&det), Path::new(&rec))
+            .expect("OCR parser should build from the shared pdfium handle");
     }
 }

@@ -11,12 +11,9 @@ export default function DocumentViewer(): JSX.Element {
     <div className="-m-6 h-screen">
       <PdfViewer
         sourceDocId={id}
-        onCapture={(capture) => {
-          // Plan 27 owns the entry editor. Until then, route to a placeholder
-          // /kbs page with the capture serialized as URL params; the entry
-          // editor will read them.
-          const cap = encodeURIComponent(JSON.stringify({ ...capture, source_doc_id: id }));
-          navigate(`/kbs?new_entry_capture=${cap}`);
+        onOpenEntry={(entryId, kbId) => {
+          // Clicking an auto-highlight opens that existing entry for editing.
+          navigate(`/kbs/${kbId}`, { state: { openEntryId: entryId } });
         }}
       />
       {params.get("page") && (
