@@ -13,9 +13,8 @@ target
 # Contains mutation testing data
 **/mutants.out*/
 
-# Overnight build loop — transient runtime artifacts (STATE.md/ITERATION_PROMPT.md/run-overnight.sh stay tracked)
-.specdex/run.log
-.specdex/DONE
+# Internal overnight-build automation — kept local, not published
+.specdex/
 
 # Rust
 /target
