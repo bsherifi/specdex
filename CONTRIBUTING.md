@@ -30,11 +30,9 @@ cargo test --workspace --manifest-path src-tauri/Cargo.toml
 
 - One feature/fix per PR.
 - Tests for new behavior.
-- Update `SPECDEX-V1.md` if you change a locked v1 contract.
 - CI must be green.
 
 ## Architecture
 
-See [§10](SPECDEX-V1.md#10-the-api-shaped-discipline-and-why-v11-team-mode-is-cheap)
-of the spec. tl;dr: business logic in `specdex_core`; thin Tauri adapter; v1.1
+tl;dr: business logic lives in `specdex_core`; the Tauri adapter is thin; v1.1
 will add an HTTP adapter alongside without core changes.

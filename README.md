@@ -28,8 +28,6 @@ API-shaped backend).
 - Single signed binary per OS — no Python/Java/Node runtime needed.
 - Your data is portable: full backup as ZIP, per-KB JSON export.
 
-See [SPECDEX-V1.md](SPECDEX-V1.md) for the full design spec.
-
 ## Install
 
 Download the signed installer for your OS from the [releases page](https://github.com/bsherifi/specdex/releases).
@@ -46,9 +44,6 @@ Download the signed installer for your OS from the [releases page](https://githu
    Material Codes, Internal Part Numbers, or Empty).
 3. Drag PDFs onto the app. Specdex parses them and scans for codes you've
    already defined.
-
-See [Flow B (ingest a document and create entries)](SPECDEX-V1.md#flow-b-ingest-a-document-and-create-entries)
-for the end-to-end loop.
 
 ## Example knowledge bases
 
@@ -74,12 +69,11 @@ and Node 22+.
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). The architecture is API-shaped
-([§10 of the spec](SPECDEX-V1.md#10-the-api-shaped-discipline-and-why-v11-team-mode-is-cheap))
-so most features land as one core function + one Tauri command + one React
-route. Test coverage is non-negotiable; CI gates on `cargo test`,
-`pnpm test`, `cargo clippy -- -D warnings`, `pnpm lint`, and Playwright E2E
-on Linux.
+See [CONTRIBUTING.md](CONTRIBUTING.md). The architecture is API-shaped —
+business logic lives in `specdex_core` behind a thin Tauri adapter — so most
+features land as one core function + one Tauri command + one React route.
+Test coverage is non-negotiable; CI gates on `cargo test`, `pnpm test`,
+`cargo clippy -- -D warnings`, `pnpm lint`, and Playwright E2E on Linux.
 
 ## Roadmap
 
@@ -88,9 +82,6 @@ on Linux.
 | **v1** (current) | Single user. PDF only. Solo workflow. |
 | **v1.1** | LAN team-mode (host/client/solo). DOCX + XLSX. Region capture. OCR text-overlay. |
 | **v2** | Global hotkey. Browser extension. Folder watch. Opt-in LLM assist for non-primary fields. |
-
-The full breakdown is in [§5](SPECDEX-V1.md#5-whats-in-v1-and-whats-deferred)
-and [§23](SPECDEX-V1.md#23-v11-deferred-features).
 
 ## License
 
