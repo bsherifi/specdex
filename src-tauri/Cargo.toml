@@ -1,0 +1,108 @@
+[package]
+name = "tauri_adapter"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+description = "Specdex Tauri adapter binary: thin command layer over specdex_core."
+
+[[bin]]
+name = "specdex"
+path = "src/main.rs"
+
+[lints]
+workspace = true
+
+[build-dependencies]
+tauri-build = { workspace = true }
+
+[dependencies]
+specdex_core = { path = "crates/core" }
+specdex_parsers = { path = "crates/parsers", features = ["real-parsers"] }
+tauri = { workspace = true }
+tauri-plugin-dialog = "2"
+specta = { workspace = true }
+tauri-specta = { workspace = true }
+specta-typescript = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+tracing-appender = "0.2"
+
+[workspace]
+resolver = "2"
+members = [
+    "crates/core",
+    "crates/parsers",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+license = "MIT"
+repository = "https://github.com/bsherifi/specdex"
+authors = ["bsherifi <betimsh99@gmail.com>"]
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+unused_must_use = "deny"
+
+[workspace.lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+# Specdex pragmatic exemptions (revisit if they ever hide a real bug):
+module_name_repetitions = "allow"
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+must_use_candidate = "allow"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = "symbols"
+
+[profile.dev]
+# Faster incremental builds during the 7 weekends of development.
+opt-level = 0
+debug = 1
+
+# ocrs and its rten* deps are CPU-bound CNNs; release-mode optimization is
+# mandatory or OCR becomes hundreds of times slower (per ocrs's own README).
+# Override the `dev` profile so `cargo test` against real OCR fixtures stays
+# usable. Profile overrides only take effect from the workspace root.
+[profile.dev.package.ocrs]
+opt-level = 3
+[profile.dev.package.rten]
+opt-level = 3
+[profile.dev.package.rten-imageproc]
+opt-level = 3
+[profile.dev.package.rten-tensor]
+opt-level = 3
+
+[workspace.dependencies]
+# Tauri 2 — pinned to the 2.x series; minor bumps within 2.x are acceptable.
+# `protocol-asset` enables the `asset:`/`http://asset.localhost` custom protocol
+# that the PDF viewer loads source documents through (see tauri.conf.json).
+tauri = { version = "2", features = ["protocol-asset"] }
+tauri-build = { version = "2", features = [] }
+# Type bridge to TS — pinned per autonomous-overnight-plan.md / spec §9.1.
+# This rc.21/rc.22/0.0.9 trio is the newest internally-consistent set that
+# compiles on the repo's pinned Rust 1.88 (specta rc.24+ needs `fmt::from_fn`,
+# stabilized in a later Rust). specta-typescript 0.0.9 requires specta =rc.22,
+# which tauri-specta rc.21 also targets.
+specta = { version = "=2.0.0-rc.22" }
+tauri-specta = { version = "=2.0.0-rc.21", features = ["derive", "typescript"] }
+specta-typescript = { version = "=0.0.9" }
+# Shared utility crates used across core + adapter (resolved here so all
+# members get the same version).
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "1"
+uuid = { version = "1", features = ["v7", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "fs", "io-util", "time"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }

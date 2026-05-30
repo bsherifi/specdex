@@ -1,0 +1,75 @@
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("@/lib/tauri", () => ({
+  identitySet: vi.fn(async () => ({ status: "ok", data: {} })),
+  kbCreate: vi.fn(async () => ({ status: "ok", data: {} })),
+  unwrap: <T,>(res: { status: "ok"; data: T } | { status: "error"; error: unknown }) => {
+    if (res.status === "error") throw new Error(String(res.error));
+    return res.data;
+  },
+}));
+
+import Onboarding from "./Onboarding";
+
+function renderOnboarding() {
+  return render(
+    <MemoryRouter>
+      <Onboarding />
+    </MemoryRouter>,
+  );
+}
+
+describe("Onboarding — Welcome step", () => {
+  it("starts at step 1 of 4 with the Welcome heading", () => {
+    renderOnboarding();
+    expect(screen.getByText(/Step 1 of 4/i)).toBeInTheDocument();
+    expect(screen.getByText(/Welcome to Specdex/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Next" })).toBeInTheDocument();
+  });
+});
+
+describe("Onboarding — Identity step", () => {
+  it("enables Next only after a non-empty name is typed", () => {
+    renderOnboarding();
+    fireEvent.click(screen.getByRole("button", { name: "Next" })); // 0 → 1
+    expect(screen.getByPlaceholderText(/Sara Chen/i)).toBeInTheDocument();
+    const next = screen.getByRole("button", { name: "Next" });
+    expect(next).toBeDisabled();
+    fireEvent.change(screen.getByPlaceholderText(/Sara Chen/i), { target: { value: "Sara" } });
+    expect(next).not.toBeDisabled();
+  });
+});
+
+describe("Onboarding — KB-create step", () => {
+  it("calls identitySet then kbCreate on Create click", async () => {
+    const { identitySet, kbCreate } = await import("@/lib/tauri");
+    renderOnboarding();
+    fireEvent.click(screen.getByRole("button", { name: "Next" })); // 0 → 1
+    fireEvent.change(screen.getByPlaceholderText(/Sara Chen/i), { target: { value: "Sara" } });
+    fireEvent.click(screen.getByRole("button", { name: "Next" })); // 1 → 2
+    // The KB name pre-fills from the chosen template.
+    fireEvent.click(screen.getByRole("button", { name: /Create/ }));
+    await waitFor(() => {
+      expect(identitySet).toHaveBeenCalledWith("Sara");
+      expect(kbCreate).toHaveBeenCalledWith(expect.objectContaining({
+        schema: expect.any(Array),
+      }));
+    });
+  });
+});
+
+describe("Onboarding — Done step", () => {
+  it("renders the 'You're ready' heading + Open button after step 2 completes", async () => {
+    renderOnboarding();
+    fireEvent.click(screen.getByRole("button", { name: "Next" })); // 0 → 1
+    fireEvent.change(screen.getByPlaceholderText(/Sara Chen/i), { target: { value: "Sara" } });
+    fireEvent.click(screen.getByRole("button", { name: "Next" })); // 1 → 2
+    fireEvent.click(screen.getByRole("button", { name: /Create/ })); // 2 → 3
+    await waitFor(() => {
+      expect(screen.getByText(/You're ready/i)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /Open Specdex/i })).toBeInTheDocument();
+    });
+  });
+});

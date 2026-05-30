@@ -1,0 +1,70 @@
+{
+  "format_version": 1,
+  "exported_at": "2026-05-24T00:00:00Z",
+  "kb": {
+    "id": "00000000-0000-0000-0000-000000000001",
+    "name": "Boeing Specs",
+    "description": "Illustrative examples of Boeing process and material specification codes.",
+    "schema": [
+      { "name": "code", "label": "Code", "type": { "kind": "text" }, "required": true, "searchable": true, "primary": true },
+      { "name": "definition", "label": "Definition", "type": { "kind": "text_multiline" }, "required": false, "searchable": true, "primary": false },
+      { "name": "category", "label": "Category", "type": { "kind": "select", "options": ["process", "material", "finish", "standard"] }, "required": false, "searchable": true, "primary": false }
+    ],
+    "primary_field": "code",
+    "searchable_fields": ["code", "definition", "category"],
+    "highlight_color": "#f59e0b",
+    "created_at": "2026-05-24T00:00:00Z",
+    "updated_at": "2026-05-24T00:00:00Z",
+    "edited_by": null
+  },
+  "entries": [
+    {
+      "id": "00000000-0000-0000-0000-000000000010",
+      "kb_id": "00000000-0000-0000-0000-000000000001",
+      "primary_value": "BAC3082",
+      "data": {
+        "code": "BAC3082",
+        "definition": "Surface preparation for anodize.",
+        "category": "process"
+      },
+      "aliases": ["BAC-3082"],
+      "source": null,
+      "notes": null,
+      "created_at": "2026-05-24T00:00:00Z",
+      "updated_at": "2026-05-24T00:00:00Z",
+      "edited_by": null
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000011",
+      "kb_id": "00000000-0000-0000-0000-000000000001",
+      "primary_value": "BAC5719",
+      "data": {
+        "code": "BAC5719",
+        "definition": "Chemical conversion coating of aluminum alloys.",
+        "category": "finish"
+      },
+      "aliases": ["BAC-5719"],
+      "source": null,
+      "notes": null,
+      "created_at": "2026-05-24T00:00:00Z",
+      "updated_at": "2026-05-24T00:00:00Z",
+      "edited_by": null
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000012",
+      "kb_id": "00000000-0000-0000-0000-000000000001",
+      "primary_value": "BMS10-11",
+      "data": {
+        "code": "BMS10-11",
+        "definition": "Primer, epoxy, corrosion-resistant.",
+        "category": "material"
+      },
+      "aliases": ["BMS 10-11", "BMS10/11"],
+      "source": null,
+      "notes": null,
+      "created_at": "2026-05-24T00:00:00Z",
+      "updated_at": "2026-05-24T00:00:00Z",
+      "edited_by": null
+    }
+  ]
+}

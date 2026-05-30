@@ -1,0 +1,46 @@
+[package]
+name = "specdex_parsers"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+description = "Specdex parsers: DocumentParser trait + pdfium + OCR implementations."
+
+[lib]
+name = "specdex_parsers"
+path = "src/lib.rs"
+
+[lints]
+workspace = true
+
+[features]
+default = []
+# Enabled by tests + the ingest crate; gates the real impls so
+# `cargo doc` / `cargo check` on contributor machines without pdfium can
+# still build the trait. ocrs is pure Rust so the `ocr` feature only
+# gates the impl module (not any native deps).
+pdfium = ["dep:pdfium-render", "dep:image"]
+# OCR rasterizes pages via pdfium and shares its single `Pdfium` handle, so it
+# requires the `pdfium` feature (which brings pdfium-render + image).
+ocr = ["pdfium", "dep:ocrs", "dep:rten"]
+real-parsers = ["pdfium", "ocr"]
+
+[dependencies]
+specdex_core = { path = "../core" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+specta = { workspace = true }
+sha2 = "0.10"
+# `sync` enables pdfium-render's `unsafe impl Send + Sync for Pdfium`, required
+# because `DocumentParser` is `Send + Sync`. It also pulls in `thread_safe`.
+pdfium-render = { version = "0.8", optional = true, features = ["sync"] }
+ocrs = { version = "0.10", optional = true }
+rten = { version = "0.21", optional = true }
+image = { version = "0.25", optional = true, default-features = false, features = ["png"] }
+
+[dev-dependencies]
+tempfile = "3"

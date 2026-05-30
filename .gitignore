@@ -13,6 +13,47 @@ target
 # Contains mutation testing data
 **/mutants.out*/
 
+# Internal overnight-build automation — kept local, not published
+.specdex/
+
+# Rust
+/target
+**/*.rs.bk
+Cargo.lock.bak
+
+# Tauri build artifacts (placeholder; plan 02 expands this)
+src-tauri/target
+
+# Node / Vite
+node_modules/
+dist/
+.vite/
+
+# Tauri dev artifacts
+src-tauri/gen/
+.tauri/
+
+# Bundled binaries (downloaded at build time)
+src-tauri/binaries/*
+!src-tauri/binaries/.gitkeep
+
+# Third-party reference repo kept locally for inspiration — never published
+customiser-frontend-repo-inspo/
+
+# Internal docs / design notes — kept local, not published
+docs/
+
+# Editor / OS
+.DS_Store
+*.log
+.vscode/
+.idea/
+
+# Playwright
+playwright-report/
+test-results/
+e2e/.cache/
+
 # RustRover
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
 #  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore

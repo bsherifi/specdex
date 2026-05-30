@@ -1,0 +1,66 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Specdex",
+  "version": "0.1.0",
+  "identifier": "app.specdex.desktop",
+  "build": {
+    "beforeDevCommand": "pnpm dev",
+    "beforeBuildCommand": "pnpm build",
+    "devUrl": "http://localhost:1420",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Specdex",
+        "width": 1280,
+        "height": 800,
+        "minWidth": 960,
+        "minHeight": 600,
+        "resizable": true,
+        "fullscreen": false,
+        "decorations": true,
+        "transparent": false
+      }
+    ],
+    "security": {
+      "assetProtocol": {
+        "enable": true,
+        "scope": ["$APPDATA/docs/**"]
+      },
+      "csp": "default-src 'self' ipc: http://ipc.localhost; img-src 'self' asset: blob: data: http://asset.localhost; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self' ipc: http://ipc.localhost asset: http://asset.localhost"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/icon.png"
+    ],
+    "resources": {
+      "binaries/pdfium/**/*": "binaries/pdfium",
+      "binaries/ocrs/*.rten": "binaries/ocrs"
+    },
+    "copyright": "Copyright © 2026 bsherifi. MIT license.",
+    "category": "Productivity",
+    "shortDescription": "Local-first knowledge base for engineering specs.",
+    "longDescription": "Specdex is a desktop application for curating, searching, and back-referencing engineering specs and codes from PDF source documents — fully local, no AI, no cloud.",
+    "windows": {
+      "wix": {
+        "language": ["en-US"]
+      }
+    },
+    "macOS": {
+      "minimumSystemVersion": "12.0",
+      "frameworks": []
+    },
+    "linux": {
+      "appimage": {
+        "bundleMediaFramework": false
+      },
+      "deb": {
+        "depends": ["libwebkit2gtk-4.1-0", "libgtk-3-0"]
+      }
+    }
+  }
+}
