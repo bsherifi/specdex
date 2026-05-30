@@ -2,7 +2,7 @@
 
 **A local-first, schema-driven knowledge base for manufacturing engineers.**
 PDFs go in; highlighted, source-backed entries come out. Fully offline,
-single signed binary per OS, MIT-licensed.
+single self-contained binary per OS, MIT-licensed.
 
 ## Why Specdex
 
@@ -25,16 +25,14 @@ API-shaped backend).
 - No AI. No telemetry. No outbound network requests.
 - No fuzzy matching — aliases are explicit.
 - MIT license; no GPL/AGPL/LGPL dependencies linked into the binary.
-- Single signed binary per OS — no Python/Java/Node runtime needed.
+- Single self-contained binary per OS — no Python/Java/Node runtime needed.
 - Your data is portable: full backup as ZIP, per-KB JSON export.
 
 ## Install
 
-Download the signed installer for your OS from the [releases page](https://github.com/bsherifi/specdex/releases).
-
-- **Windows**: `Specdex_*.msi` (Windows 10 1809+).
-- **macOS**: `Specdex_*.dmg` (signed + notarized, universal binary).
-- **Linux**: `Specdex_*.AppImage`.
+Prebuilt installers aren't published yet — for now, **build from source**
+(see [Build from source](#build-from-source) below). Signed, notarized per-OS
+installers (`.msi` / `.dmg` / `.AppImage`) are planned once code-signing is set up.
 
 ## First-run flow
 
